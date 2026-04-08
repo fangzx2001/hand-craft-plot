@@ -1,0 +1,500 @@
+================================================================================
+                学术道德祭坛 - 代码结构文档
+                      开发者: FANGZx
+                      版本: v 2.0.0
+================================================================================
+
+【项目概述】
+这是一个MATLAB风格的在线绘图工具，基于HTML5 Canvas实现，支持：
+- 多象限坐标系统（7种模式：1/2/3/4/12/14/1234）
+- 坐标轴设置（范围、刻度、网格、网格样式、象限模式）
+- 科学计数法显示（X轴/Y轴独立设置）
+- 数据点管理（最多300点）
+- 曲线管理（最多7条曲线）
+- 点样式管理
+- 数据标注（MATLAB风格：方形气泡框）
+- 导出为PNG/JPG/SVG（5倍高清分辨率）
+
+================================================================================
+                           一、文件结构
+================================================================================
+
+主文件: DontLoseYourAcademicMorality.html
+- 一个完整的单文件HTML应用
+- 包含所有CSS样式（<style>标签，约1-420行）
+- 包含所有HTML结构（<body>标签，约420-1100行）
+- 包含所有JavaScript代码（<script>标签，约1100-3350行）
+
+依赖: 无外部依赖，纯原生实现
+
+================================================================================
+                           二、HTML结构概览
+================================================================================
+
+【整体布局】
+<container>
+├── <header>                    # 顶部标题栏 "学术道德祭坛"
+├── <main-content>
+│   ├── <canvas-container>    # 画布区域
+│   │   ├── <canvas-wrapper>
+│   │   │   └── <#mainCanvas>  # 主画布
+│   │   ├── <.zoom-info>       # 缩放显示
+│   │   ├── <.point-count>     # 数据点计数
+│   │   └── <.canvas-controls> # 锁定/归位按钮
+│   │
+│   └── <menu-panel>          # 右侧菜单面板（320px宽）
+│       ├── <.menu-title>      # 菜单标题（含版本号v 2.0.0）
+│       └── <#mainMenu>       # 主菜单容器
+│           ├── <curve-section>    # 曲线管理
+│           ├── <style-section>    # 样式管理
+│           ├── <axis-section>     # 坐标轴设置（含象限模式）
+│           └── <title-section>    # 标题/图例设置
+│
+├── <#helpModal>              # 使用说明弹窗
+├── <#changelogModal>         # 更新日志弹窗
+└── <script>                   # JavaScript代码
+</container>
+
+【关键HTML元素ID】
+- mainCanvas         : 主画布
+- zoomInfo           : 缩放信息显示
+- pointCount         : 数据点计数
+- lockBtn            : 锁定按钮
+- quadrantMode        : 象限模式下拉选择
+- mainMenu           : 主菜单容器
+- pointMenu          : 数据点设置菜单（点击数据点后显示）
+
+================================================================================
+                           三、CSS样式结构
+================================================================================
+
+【主要CSS类】
+全局样式
+- container          : 整体容器
+- header             : 顶部标题栏
+- main-content       : 主体内容区（flex布局，16:9宽高比）
+- canvas-container   : 画布容器
+- canvas-wrapper     : 画布包装器（90%宽高，带阴影和边框）
+- menu-panel         : 右侧菜单面板（固定宽度320px）
+
+菜单样式
+- menu-section       : 菜单区块
+- menu-header        : 菜单标题栏（可折叠，渐变背景）
+- menu-content       : 菜单内容
+- submenu-content    : 子菜单内容（padding: 15px 20px）
+- collapsed          : 折叠状态类
+
+表单样式
+- form-group         : 表单分组
+- form-row           : 表单行（两列布局，gap: 10px）
+- range-slider       : 范围滑块
+
+按钮样式
+- btn                : 按钮基类
+- btn-primary        : 主按钮
+- btn-secondary      : 次按钮
+- btn-danger         : 危险按钮
+- btn-block          : 块级按钮
+- canvas-ctrl-btn    : 画布控制按钮（锁定/归位）
+
+其他
+- modal-overlay      : 弹窗遮罩层
+- modal-content      : 弹窗内容
+- modal-header       : 弹窗标题栏
+- modal-body         : 弹窗主体
+- divider            : 分隔线
+- hidden             : 隐藏类
+- warning-box        : 免责声明警告框
+
+================================================================================
+                           四、JavaScript核心结构
+================================================================================
+
+【1. 全局状态对象 state】
+
+const state = {
+    // 画布状态
+    zoom: 1,                  # 当前缩放比例
+    panOffset: { x: 0, y: 0 },# 平移偏移量
+    isDragging: false,        # 是否正在拖拽
+    isLocked: false,          # 是否锁定画布
+    
+    // 坐标轴设置
+    axis: {
+        xMin, xMax, yMin, yMax,           # 坐标范围
+        xCells, yCells,                    # 刻度数量
+        xName, yName,                      # 坐标轴名称
+        fontSize,                          # 坐标轴字号
+        gridStyle: 'none',                 # 网格样式: none/dashed/solid
+        gridColor,                         # 网格颜色
+        xDecimalPlaces, yDecimalPlaces,    # 小数位数(0-7)
+        xScientificNotation,               # X轴科学计数法
+        yScientificNotation,               # Y轴科学计数法
+        xExponent, yExponent,             # 科学计数法指数(-10到10)
+        quadrantMode: '1'                 # 象限模式: '1'/'2'/'3'/'4'/'12'/'14'/'1234'
+    },
+    
+    // 数据点
+    points: [],               # 数据点数组
+    selectedPoint: null,       # 当前选中的数据点
+    maxPoints: 300,            # 最大数据点数
+    
+    // 曲线
+    curves: [],               # 曲线数组
+    maxCurves: 7,              # 最大曲线数
+    curveCounter: 0,           # 曲线ID计数器
+    
+    // 样式
+    styles: [],               # 样式数组
+    styleCounter: 0,          # 样式ID计数器
+    
+    // 标题和图例
+    title: '',                # 图表标题
+    titleSize: 16,            # 标题字号
+    legendSize: 12,           # 图例字号
+    
+    // 画布边距（已优化以容纳多象限模式的标签）
+    canvasPadding: { top: 65, right: 95, bottom: 55, left: 105 }
+};
+
+【数据点结构】
+point = {
+    id: number,               # 唯一ID
+    x: number,                # X坐标（真实值，非显示值）
+    y: number,                # Y坐标（真实值，非显示值）
+    showAnnotation: boolean,  # 是否显示标注
+    annotationSize: number    # 标注字号
+};
+
+【曲线结构】
+curve = {
+    id: number,
+    name: string,             # 曲线名称
+    points: [],               # 包含的数据点ID数组
+    lineWidth: number,        # 线条粗细
+    color: string,            # 线条颜色
+    lineStyle: 'solid'|'dashed', # 线条样式
+    smooth: boolean,         # 是否平滑连接
+    showLegend: boolean       # 是否显示图例
+};
+
+【样式结构】
+style = {
+    id: number,
+    name: string,             # 样式名称
+    points: [],               # 应用此样式的点ID数组
+    shape: string,            # 形状类型
+    size: number,             # 大小
+    color: string             # 颜色
+};
+
+================================================================================
+                           五、核心函数分类与行号
+================================================================================
+
+【初始化函数】
+- init()                     (L1420) - 页面初始化
+- updateQuadrantMode()        (L1454) - 更新象限模式
+- initMenuStates()           (L1459) - 初始化菜单折叠状态
+- resizeCanvas()             (L1471) - 调整画布大小
+
+【坐标转换函数】
+- getPlotArea()              (L1486) - 获取绘图区域（含90%缩放和原点计算）
+- dataToCanvas(x, y)         (L1552) - 数据坐标→画布坐标（考虑科学计数法和象限）
+- canvasToData(canvasX, canvasY) (L1599) - 画布坐标→数据坐标
+- isPointInPlotArea(x, y)    (L1645) - 检查点是否在绘图区域内
+- isPointOnAxis(x, y)        (L1650) - 检查点是否在坐标轴上
+- findPointAtPosition(x, y)  (L1682) - 根据坐标查找数据点
+- screenToCanvas(screenX, screenY) (L1695) - 屏幕坐标→画布坐标（考虑缩放平移）
+- dataToCanvasSVG(point, plot)(L3306) - SVG导用的坐标转换
+
+【鼠标事件处理】
+- handleWheel(e)             (L1702) - 滚轮缩放（受isLocked影响）
+- handleMouseDown(e)         (L1719) - 鼠标按下（选择点/开始拖拽）
+- handleMouseMove(e)         (L1756) - 鼠标移动（平移画布）
+- handleMouseUp(e)           (L1769) - 鼠标松开
+- handleDoubleClick(e)       (L1796) - 双击添加数据点
+- handleRightClick(e)        (L1810) - 右键菜单
+
+【画布控制】
+- toggleLock()               (L1773) - 切换锁定状态
+- resetCanvas()              (L1789) - 重置画布（缩放100%，偏移归零）
+
+【数据点管理】
+- addPoint(x, y)             (L1822) - 添加数据点
+- deletePoint(point)         (L1842) - 删除数据点
+- updatePointCount()         (L1860) - 更新数据点计数
+- showAxisMenu()             (L1864) - 显示坐标轴设置菜单
+- showPointMenu(point)       (L1881) - 显示数据点设置菜单
+- updatePointData()          (L1952) - 更新数据点坐标
+- toggleAnnotation()         (L1960) - 切换标注显示
+- updateAnnotation()         (L1973) - 更新标注设置
+- deleteSelectedPoint()      (L1980) - 删除选中的数据点
+
+【UI控制函数】
+- backToMainMenu()           (L1899) - 返回主菜单
+- toggleMenu(menuId)         (L1986) - 切换菜单
+- toggleSubmenu(sectionId)   (L1999) - 切换子菜单
+
+【坐标轴设置】
+- updateAxisRange()          (L1909) - 更新坐标轴范围
+- updateAxisNames()          (L1946) - 更新坐标轴名称
+- updateGridStyle()          (L2369) - 更新网格样式
+
+【曲线管理】
+- addCurve()                 (L2012) - 添加曲线
+- renderCurveList()          (L2032) - 渲染曲线列表
+- renderPointCheckboxes()    (L2125) - 渲染点复选框列表
+- toggleCurveBody(index)     (L2135) - 折叠/展开曲线设置
+- updateCurveName(index)     (L2140) - 更新曲线名称
+- updateCurveWidth(index)    (L2145) - 更新线条粗细
+- updateCurveColor(index)    (L2150) - 更新线条颜色
+- updateCurveLineStyle(index)(L2156) - 更新线条样式
+- updateCurveSmooth(index)   (L2162) - 更新平滑设置
+- updateCurveLegend(index)   (L2168) - 更新图例显示
+- toggleSelectAllCurvePoints(index) (L2173) - 全选/取消全选曲线点
+- toggleCurvePoint(id, checked)(L2187) - 切换单个曲线点
+- deleteCurve(index)         (L2204) - 删除曲线
+
+【样式管理】
+- addStyle()                 (L2210) - 添加样式
+- renderStyleList()          (L2226) - 渲染样式列表
+- renderStylePointCheckboxes()(L2302) - 渲染样式点复选框
+- toggleStyleBody(index)     (L2312) - 折叠/展开样式设置
+- updateStyleShape(index)    (L2317) - 更新形状
+- updateStyleSize(index)     (L2322) - 更新大小
+- updateStyleColor(index)    (L2327) - 更新颜色
+- toggleSelectAllStylePoints(index) (L2333) - 全选/取消全选样式点
+- toggleStylePoint(id, checked)(L2347) - 切换单个样式点
+- deleteStyle(index)         (L2363) - 删除样式
+
+【其他设置】
+- updateTitle()              (L2376) - 更新标题
+- updateLegendSize()         (L2382) - 更新图例字号
+- formatText(text)          (L2387) - 格式化文本
+
+【渲染函数】（核心绘图逻辑）
+- render()                   (L2393) - 主渲染函数
+- drawGrid(plot)            (L2416) - 绘制网格
+- drawAxes(plot)            (L2446) - 绘制坐标轴（多象限自适应）
+- drawCurves(plot)          (L2722) - 绘制曲线
+- drawSmoothCurve(points)   (L2762) - 绘制平滑曲线
+- drawPoints(plot)          (L2782) - 绘制数据点
+- drawShape(x, y, shape, size)(L2811) - 绘制数据点形状
+- drawAnnotations(plot)      (L2854) - 绘制数据标注（MATLAB风格方形气泡）
+- drawTitle(plot)           (L2921) - 绘制标题
+- drawLegend(plot)          (L2931) - 绘制图例
+
+【导出函数】
+- saveAs(format)            (L2975) - 导出为PNG/JPG/SVG（5倍分辨率）
+- downloadBlob(blob, filename)(L3005) - 下载Blob文件
+- generateSVG()             (L3020) - 生成SVG完整内容（含科学计数法）
+- generateSVGShape(x, y, shape, size, color) (L3316) - SVG形状生成
+
+【弹窗函数】
+- showHelpModal()            (L3337) - 显示使用说明
+- closeHelpModal()           (L3341) - 关闭使用说明
+- showChangelogModal()       (L3345) - 显示更新日志
+- closeChangelogModal()      (L3349) - 关闭更新日志
+
+================================================================================
+                           六、关键常量和配置
+================================================================================
+
+【画布边距】
+canvasPadding: { top: 65, right: 95, bottom: 55, left: 105 }
+- 已优化以容纳Y轴标签（动态偏移）和多象限模式的标签
+
+【坐标轴缩放比例】
+axisScale: 0.9  （在getPlotArea中硬编码）
+- 所有象限模式的坐标轴长度缩短至90%
+- 为坐标轴名称和标签留出更多空间
+
+【导出分辨率】
+exportScale: 5  （PNG/JPG均为5倍缩放）
+exportQuality: 0.95  （JPG质量参数）
+
+【数据点限制】
+maxPoints: 300
+点属性: id, x, y, showAnnotation, annotationSize
+
+【曲线限制】
+maxCurves: 7
+曲线属性: id, name, points[], lineWidth, color, lineStyle, smooth, showLegend
+
+【标注格式（MATLAB风格）】
+- 方形圆角气泡框（rx=3, ry=3）
+- 左下角对齐数据点
+- 两行显示: X值 / Y值
+- 字母: 深色 #2d3748
+- 数字: 加粗浅蓝色 #3b82f6
+- 边框: 灰色 #718096
+- 背景: 半透明白色 rgba(255,255,255,0.95)
+
+【形状类型】
+- filledCircle     : 实心圆
+- hollowCircle     : 空心圆
+- filledSquare     : 实心方块
+- hollowSquare     : 空心方块
+- triangle         : 三角形
+- diamond          : 菱形
+- cross            : 十字
+- xShape           : X形
+
+【象限模式】
+quadrantMode: '1'|'2'|'3'|'4'|'12'|'14'|'1234'
+- '1': 第一象限（原点左下）- X+, Y+
+- '2': 第二象限（原点右下）- X-, Y+
+- '3': 第三象限（原点右上）- X-, Y-
+- '4': 第四象限（原点左上）- X+, Y-
+- '12': 上半轴（原点下方中间）- X±, Y+
+- '14': 左半轴（原点左侧中间）- X+, Y±
+- '1234': 全坐标（原点正中）- X±, Y±
+
+================================================================================
+                           七、常用修改指南
+================================================================================
+
+【添加新功能】
+1. 在适当位置添加HTML元素（约420-1100行区域）
+2. 添加对应的CSS样式（约1-420行区域）
+3. 在state中添加必要的状态（约1380-1420行区域）
+4. 添加处理函数
+5. 如需渲染，添加到render()函数中（L2393）
+
+【修改象限模式相关】
+- 象限选择UI: HTML中quadrantMode下拉框
+- 原点计算: getPlotArea() 函数（L1486）中的switch语句
+- 坐标轴绘制: drawAxes() 函数（L2446）中的isXAxisAtTop/Bottom等判断
+- 坐标转换: dataToCanvas()/canvasToData() 中的象限判断
+- 标签定位: drawAxes() 中xLabelY/yLabelOffset等变量
+
+【修改数据标注】
+- Canvas绘制: drawAnnotations(plot) 函数（L2854）
+- SVG版本: generateSVG() 函数中的标注部分（约3270行）
+
+【修改坐标轴绘制】
+- Canvas绘制: drawAxes(plot) 函数（L2446）
+- 关键变量: xAxisY, yAxisX, xLabelY, yLabelOffset
+- 科学计数法: 约2655-2700行
+
+【修改曲线绘制】
+- 位置: drawCurves(plot) 函数（L2722）
+- 平滑曲线: drawSmoothCurve(points) 函数（L2762）
+
+【修改数据点绘制】
+- 位置: drawPoints(plot) 函数（L2782）
+- 形状函数: drawShape(x, y, shape, size) 函数（L2811）
+
+【修改画布交互】
+- 滚轮缩放: handleWheel() 函数（L1702）
+- 拖拽平移: handleMouseDown/Move/Up() 函数
+- 双击添加点: handleDoubleClick() 函数（L1796）
+
+【修改导出功能】
+- 主函数: saveAs(format) 函数（L2975）
+- SVG生成: generateSVG() 函数（L3020）
+- 注意: SVG需同步更新标签位置和科学计数法
+
+【修改标题/图例】
+- 标题绘制: drawTitle(plot) 函数（L2921），位置 plot.top - 70
+- 图例绘制: drawLegend(plot) 函数（L2931）
+
+================================================================================
+                           八、版本历史
+================================================================================
+
+v 2.0.0 - 多象限模式 (2026-04-08)
+- 新增多象限模式支持（1/2/3/4/12/14/1234）
+- 坐标轴长度优化至90%
+- 动态标签定位（Y轴根据小数点位数调整）
+- SVG导出完整支持（含科学计数法）
+- 高分辨率导出（5倍缩放）
+- 修复3/4象限模式标题与坐标轴重叠问题
+- 修复科学计数法位置问题
+
+v 1.1.2 - 标注优化
+- 数据标注改为MATLAB风格（方形气泡框）
+
+v 1.1.1 - 画布控制
+- 新增锁定绘图框功能
+- 新增绘图框归位功能
+
+v 1.1.0 - 界面优化
+- 修复主菜单三角符号朝向
+- 优化使用说明滚动条样式
+- 新增更新日志功能
+- 优化按钮点击动画和菜单hover效果
+
+v 1.0.5 - 科学计数法优化
+- 坐标轴范围设置使用显示值
+
+v 1.0.4 - 功能优化
+- X轴和Y轴独立设置（小数位、科学计数法）
+
+v 1.0.3 - 功能增强
+- 全选/取消全选切换
+- 保存文件名与图名称一致
+- 小数点位数设置
+- 科学计数法功能
+
+v 1.0.2 - 功能增强
+- 全选数据点功能
+- 修复滚动条位置问题
+
+v 1.0.1 - 修复更新
+- 数据点列表实时更新
+- 坐标偏移问题修复
+
+v 1.0.0 - 初始版本
+- 基础绘图功能
+
+================================================================================
+                           九、注意事项
+================================================================================
+
+1. 科学计数法转换
+   - dataToCanvas(): 真实值 / 10^exponent = 显示值
+   - canvasToData(): 显示值 * 10^exponent = 真实值
+   - 数据点存储的是真实值，不是显示值
+
+2. 坐标转换优先级
+   - screenToCanvas(): 考虑缩放和平移
+   - dataToCanvas(): 不考虑缩放平移，只考虑科学计数法和象限模式
+
+3. 锁定状态
+   - isLocked = true 时，handleWheel和拖拽操作被阻止
+
+4. 子菜单边距
+   - 使用 submenu-content 类自动获得 padding: 15px 20px
+   - 其他自定义菜单需手动添加 padding
+
+5. 标注设置
+   - 气泡框宽度自动根据内容计算
+   - 左下角对齐数据点位置
+
+6. 象限模式核心逻辑
+   - quadrantMode: '1'/'2'/'3'/'4'/'12'/'14'/'1234'
+   - getPlotArea()返回originX/originY表示原点位置（L1486）
+   - 坐标轴缩放90%为所有标签留空间
+   - dataToCanvas()根据象限模式计算画布坐标
+   - drawAxes()根据象限模式绘制坐标轴和标签
+
+7. 标签位置动态计算
+   - X轴标签: 3/4象限在上方(isXAxisAtTop)，其他在下方
+   - Y轴标签: 2/3象限在右侧(isYAxisAtRight)，其他在左侧
+   - Y轴偏移量 = 33 + yDecimalPlaces * 6（随小数位动态调整）
+   - 标题位置: plot.top - 70（固定偏移）
+
+8. 导出一致性
+   - saveAs()直接捕获当前画布内容（含缩放/平移状态）
+   - generateSVG()必须与drawAxes()保持位置同步
+   - 科学计数法在两个函数中都需正确输出
+
+9. 画布边距配置
+   - left: 105px（容纳Y轴刻度和标签）
+   - right: 95px（容纳右侧元素）
+   - top: 65px（容纳标题和X轴标签）
+   - bottom: 55px（容纳X轴刻度和标签）
+
+================================================================================

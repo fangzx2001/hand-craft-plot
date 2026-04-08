@@ -1,0 +1,3374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DontLoseYourAcademicMorality - v 2.0.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: #f1f1f1;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 50px;
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            aspect-ratio: 16/9;
+            max-height: calc(100vh - 50px);
+        }
+
+        .canvas-container {
+            flex: 1;
+            background: white;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 90%;
+            height: 85%;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+
+        #mainCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .menu-panel {
+            width: 320px;
+            background: #fafafa;
+            overflow-y: auto;
+            border-left: 1px solid #e0e0e0;
+        }
+
+        .menu-section {
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .menu-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #2c5282 0%, #2b6cb0 100%);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .menu-header:hover::before {
+            left: 100%;
+        }
+
+        .menu-header:hover {
+            background: linear-gradient(135deg, #2b6cb0 0%, #3182ce 100%);
+            padding-left: 25px;
+        }
+
+        .menu-header .arrow {
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .menu-header:not(.collapsed) .arrow {
+            transform: rotate(180deg);
+        }
+
+        .menu-content {
+            padding: 15px 20px;
+            background: white;
+            display: none;
+        }
+
+        .menu-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        .btn:active::after {
+            width: 200px;
+            height: 200px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(49, 130, 206, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(229, 62, 62, 0.4);
+        }
+
+        .btn-danger:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 161, 105, 0.4);
+        }
+
+        .btn-success:active {
+            transform: translateY(0);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            background: white;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-item:hover {
+            border-color: #3182ce;
+            background: #ebf8ff;
+        }
+
+        .checkbox-item input {
+            cursor: pointer;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            width: 40px;
+            height: 32px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .color-preview {
+            flex: 1;
+            height: 32px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .range-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3182ce;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .point-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .point-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #f7fafc;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .point-item:hover {
+            background: #edf2f7;
+            border-color: #e2e8f0;
+        }
+
+        .point-item.selected {
+            background: #ebf8ff;
+            border-color: #3182ce;
+        }
+
+        .curve-item, .style-item {
+            background: #f7fafc;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .submenu-section {
+            margin-bottom: 10px;
+        }
+
+        .submenu-header {
+            padding: 10px 15px;
+            background: #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: #2d3748;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submenu-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .submenu-header:hover::before {
+            transform: scaleY(1);
+        }
+
+        .submenu-header:hover {
+            background: #e2e8f0;
+            padding-left: 18px;
+        }
+
+        .submenu-content {
+            padding: 15px;
+            display: none;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .submenu-content.active {
+            display: block;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .submenu-header:not(.collapsed) .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .curve-header, .style-header {
+            padding: 10px 15px;
+            background: #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .curve-body, .style-body {
+            padding: 15px;
+            display: none;
+        }
+
+        .curve-body.active, .style-body.active {
+            display: block;
+        }
+
+        .legend-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            margin-top: 10px;
+        }
+
+        .legend-line {
+            width: 30px;
+            height: 3px;
+            background: #3182ce;
+        }
+
+        .legend-text {
+            font-family: 'SimSun', 'Times New Roman', serif;
+        }
+
+        .info-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #3182ce;
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 15px 0;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .zoom-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .canvas-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .canvas-ctrl-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .canvas-ctrl-btn:hover {
+            background: rgba(49, 130, 206, 0.9);
+            transform: translateY(-1px);
+        }
+
+        .canvas-ctrl-btn:active {
+            transform: translateY(0);
+        }
+
+        .point-count {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(49, 130, 206, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .save-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .save-btn {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .annotation-handle {
+            position: absolute;
+            width: 100px;
+            height: 4px;
+            background: #3182ce;
+            cursor: ew-resize;
+            border-radius: 2px;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .axis-indicator {
+            position: absolute;
+            background: rgba(49, 130, 206, 0.1);
+            pointer-events: none;
+        }
+
+        .axis-clickable {
+            cursor: pointer;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        .menu-title {
+            padding: 15px 20px;
+            background: #2d3748;
+            color: white;
+            font-weight: 500;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #3182ce;
+            cursor: pointer;
+            font-size: 13px;
+            margin-bottom: 15px;
+            padding: 8px 12px;
+            background: #ebf8ff;
+            border-radius: 4px;
+            width: fit-content;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: #bee3f8;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .shape-preview {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .toggle-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+
+        .toggle-btn:last-child {
+            border-radius: 0 4px 4px 0;
+        }
+
+        .toggle-btn.active {
+            background: #3182ce;
+            color: white;
+            border-color: #3182ce;
+        }
+
+        .toggle-group {
+            display: flex;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 25px;
+            line-height: 1.8;
+            color: #2d3748;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .modal-body h3 {
+            color: #1a365d;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        .modal-body h3:first-child {
+            margin-top: 0;
+        }
+
+        .modal-body ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .modal-body li {
+            margin: 8px 0;
+        }
+
+        .modal-body .warning-box {
+            background: #fff5f5;
+            border: 1px solid #fc8181;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .modal-body .warning-box h4 {
+            color: #c53030;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+
+        .modal-body .warning-box p {
+            margin: 0;
+            font-size: 13px;
+            color: #742a2a;
+        }
+
+        .modal-body .developer-info {
+            background: #ebf8ff;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .modal-body .developer-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .modal-body .developer-info .version {
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .changelog-entry {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .changelog-entry:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .changelog-entry h4 {
+            color: #2d3748;
+            margin: 0 0 5px 0;
+            font-size: 15px;
+        }
+
+        .changelog-entry .changelog-date {
+            color: #718096;
+            font-size: 12px;
+            margin: 0 0 10px 0;
+        }
+
+        .changelog-entry ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .changelog-entry li {
+            color: #4a5568;
+            font-size: 13px;
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📖 使用说明</h2>
+                <button class="modal-close" onclick="closeHelpModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>🎯 基本操作</h3>
+                <ul>
+                    <li><strong>添加数据点</strong>：在画布区域双击即可添加数据点</li>
+                    <li><strong>删除数据点</strong>：右键点击数据点可删除</li>
+                    <li><strong>选中数据点</strong>：左键点击数据点，右侧菜单显示详细设置</li>
+                    <li><strong>缩放画布</strong>：使用鼠标滚轮放大或缩小</li>
+                    <li><strong>平移画布</strong>：按住左键拖拽画布区域</li>
+                </ul>
+
+                <h3>📊 坐标轴设置</h3>
+                <ul>
+                    <li>点击X轴或Y轴可选中并打开设置菜单</li>
+                    <li>可调整坐标轴范围、单元格数、名称等</li>
+                    <li>再次点击已选中的坐标轴可取消选中</li>
+                </ul>
+
+                <h3>📈 曲线功能</h3>
+                <ul>
+                    <li>最多可创建7条曲线</li>
+                    <li>可选择要连接的数据点</li>
+                    <li>支持实线/虚线、折线/平滑曲线</li>
+                    <li>可自定义颜色、粗细和图例</li>
+                </ul>
+
+                <h3>🎨 数据点样式</h3>
+                <ul>
+                    <li>支持7种形状：实心圆、空心圆、方形、三角形、×形</li>
+                    <li>可调整大小和颜色</li>
+                    <li>批量应用样式到多个数据点</li>
+                </ul>
+
+                <h3>💾 保存功能</h3>
+                <ul>
+                    <li>支持PNG、JPG、SVG三种格式</li>
+                    <li>导出高清图片（2倍分辨率）</li>
+                </ul>
+
+                <div class="warning-box">
+                    <h4>⚠️ 免责声明</h4>
+                    <p><strong>严禁使用本网页摧毁你的学术道德，一切后果与开发者无关，由用户自己承担。</strong></p>
+                    <p style="margin-top: 8px;">本工具仅供学习和研究目的使用，请遵守学术诚信规范。</p>
+                </div>
+
+                <div class="developer-info">
+                    <p><strong>开发者：FANGZx</strong></p>
+                    <p class="version">DontLoseYourAcademicMorality - v 2.0.0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="changelogModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 更新日志</h2>
+                <button class="modal-close" onclick="closeChangelogModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                <div class="changelog-entry">
+                    <h4>v 2.0.0 - 多象限模式</h4>
+                    <p class="changelog-date">2026-04-07</p>
+                    <ul>
+                        <li>新增多象限模式支持，可在坐标轴设置中选择</li>
+                        <li>支持1/2/3/4单个象限模式</li>
+                        <li>支持12上半轴、14右半轴、1234全坐标模式</li>
+                        <li>各象限模式下原点位置自动调整</li>
+                        <li>坐标轴绘制根据象限模式自适应</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-entry">
+                    <h4>v 1.1.2 - 标注优化</h4>
+                    <p class="changelog-date">2026-04-07</p>
+                    <ul>
+                        <li>数据标注改为MATLAB风格：方形气泡框 + 两行显示</li>
+                        <li>第一行显示 X 值，第二行显示 Y 值</li>
+                        <li>数字使用加粗浅蓝色，字母使用深色</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-entry">
+                    <h4>v 1.1.1 - 画布控制</h4>
+                    <p class="changelog-date">2026-04-07</p>
+                    <ul>
+                        <li>新增锁定绘图框功能，锁定后禁止缩放和平移</li>
+                        <li>新增绘图框归位功能，一键恢复默认视图</li>
+                        <li>画布右下角新增控制按钮</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-entry">
+                    <h4>v 1.1.0 - 界面优化</h4>
+                    <p class="changelog-date">2026-04-06</p>
+                    <ul>
+                        <li>修复主菜单三角符号朝向：初始朝下，展开后朝上</li>
+                        <li>优化使用说明滚动条样式，滚动条现在在窗口内部</li>
+                        <li>新增更新日志功能，可在主菜单查看所有版本记录</li>
+                        <li>优化按钮点击动画，添加波纹效果</li>
+                        <li>优化菜单项hover效果，添加滑动动画</li>
+                        <li>优化自定义滚动条样式，更加美观</li>
+                        <li>优化子菜单展开/收起动画效果</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-entry">
+                    <h4>v 1.0.5 - 科学计数法优化</h4>
+                    <p class="changelog-date">2026-04-06</p>
+                    <ul>
+                        <li>使用科学计数法时，坐标轴范围设置现在输入显示值而非真实值</li>
+                        <li>例如：要显示0到1000的范围，开启×10³后，坐标轴范围设置输入0到1</li>
+                        <li>数据点坐标仍为真实值，系统自动进行转换</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-entry">
+                    <h4>v 1.0.4 - 功能优化</h4>
+                    <p class="changelog-date">2026-04-06</p>
+                    <ul>
+                        <li>X轴和Y轴现在分别拥有独立的小数点位数设置</li>
+                        <li>X轴和Y轴现在分别拥有独立的科学计数法设置</li>
+                        <li>主菜单"调整坐标轴样式"中新增"打开坐标轴详细设置"按钮</li>
+                        <li>点击坐标轴可直接跳转到对应的轴设置区域</li>
+                        <li>修复了小数点位数设置为0时显示为2位的问题</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-entry">
+                    <h4>v 1.0.3 - 功能增强</h4>
+                    <p class="changelog-date">2026-04-06</p>
+                    <ul>
+                        <li>全选/取消全选功能优化，支持切换</li>
+                        <li>保存文件名与图名称一致</li>
+                        <li>新增坐标轴小数点位数设置（0-7位）</li>
+                        <li>新增坐标轴科学计数法显示功能</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-entry">
+                    <h4>v 1.0.2 - 功能增强</h4>
+                    <p class="changelog-date">2026-04-06</p>
+                    <ul>
+                        <li>新增全选数据点功能</li>
+                        <li>修复滚动条位置重置问题</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-entry">
+                    <h4>v 1.0.1 - 修复更新</h4>
+                    <p class="changelog-date">2026-04-06</p>
+                    <ul>
+                        <li>修复数据点列表实时更新问题</li>
+                        <li>修复坐标偏移问题</li>
+                    </ul>
+                </div>
+
+                <div class="changelog-entry">
+                    <h4>v 1.0.0 - 初始版本</h4>
+                    <p class="changelog-date">2026-04-06</p>
+                    <ul>
+                        <li>画布系统：缩放、平移</li>
+                        <li>坐标轴功能：范围、单元格数、名称设置</li>
+                        <li>数据点管理：添加、删除、编辑、标注</li>
+                        <li>曲线功能：最多7条曲线，多种样式</li>
+                        <li>数据点样式：7种形状，批量应用</li>
+                        <li>保存功能：PNG、JPG、SVG</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <DontLoseYourAcademicMorality>
+        </div>
+        <div class="main-content">
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <canvas id="mainCanvas"></canvas>
+                </div>
+                <div class="zoom-info" id="zoomInfo">缩放: 100%</div>
+                <div class="point-count" id="pointCount">数据点: 0/300</div>
+                <div class="canvas-controls">
+                    <button class="canvas-ctrl-btn" id="lockBtn" onclick="toggleLock()" title="锁定/解锁绘图框">🔓 未锁定</button>
+                    <button class="canvas-ctrl-btn reset-btn" onclick="resetCanvas()" title="绘图框归位">🏠 归位</button>
+                </div>
+            </div>
+            <div class="menu-panel">
+                <div class="menu-title">DontLoseYourAcademicMorality<br><span style="font-size: 14px;">v 2.0.0</span></div>
+                
+                <!-- 初始菜单 -->
+                <div id="mainMenu">
+                    <div class="menu-section">
+                        <div class="menu-header" onclick="toggleMenu('curveMenu')">
+                            <span>新建曲线</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="menu-content" id="curveMenu">
+                            <div id="curveList"></div>
+                            <button class="btn btn-primary btn-block" onclick="addCurve()" id="addCurveBtn">
+                                + 添加曲线
+                            </button>
+                            <div class="divider"></div>
+                            <div class="form-group">
+                                <label>图例尺寸</label>
+                                <input type="range" class="range-slider" id="legendSize" min="8" max="20" value="12" onchange="updateLegendSize()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-header" onclick="toggleMenu('styleMenu')">
+                            <span>新建数据点样式</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="menu-content" id="styleMenu">
+                            <div id="styleList"></div>
+                            <button class="btn btn-primary btn-block" onclick="addStyle()" id="addStyleBtn">
+                                + 添加样式
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-header" onclick="toggleMenu('axisStyleMenu')">
+                            <span>调整坐标轴样式</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="menu-content" id="axisStyleMenu">
+                            <button class="btn btn-primary btn-block" onclick="showAxisMenu()" style="margin-bottom: 10px;">
+                                打开坐标轴详细设置
+                            </button>
+                            <div class="divider"></div>
+                            <div class="form-group">
+                                <label>网格样式</label>
+                                <select id="gridStyle" onchange="updateGridStyle()">
+                                    <option value="none">无</option>
+                                    <option value="dashed">虚线</option>
+                                    <option value="solid">实线</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>网格颜色</label>
+                                <div class="color-picker-wrapper">
+                                    <input type="color" id="gridColor" value="#e0e0e0" onchange="updateGridStyle()">
+                                    <div class="color-preview" id="gridColorPreview" style="background: #e0e0e0;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-header" onclick="toggleMenu('titleMenu')">
+                            <span>图名称</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="menu-content" id="titleMenu">
+                            <div class="form-group">
+                                <label>图片标题</label>
+                                <input type="text" id="figureTitle" placeholder="输入图片标题" oninput="updateTitle()">
+                            </div>
+                            <div class="form-group">
+                                <label>标题字号</label>
+                                <input type="range" class="range-slider" id="titleSize" min="12" max="24" value="16" oninput="updateTitle()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-header" onclick="toggleMenu('saveMenu')">
+                            <span>保存成果</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="menu-content" id="saveMenu">
+                            <div class="save-options">
+                                <button class="btn btn-success save-btn" onclick="saveAs('png')">保存 PNG</button>
+                                <button class="btn btn-success save-btn" onclick="saveAs('jpg')">保存 JPG</button>
+                                <button class="btn btn-success save-btn" onclick="saveAs('svg')">保存 SVG</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-header" onclick="showHelpModal()">
+                            <span>使用说明</span>
+                            <span class="arrow">📖</span>
+                        </div>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-header" onclick="showChangelogModal()">
+                            <span>更新日志</span>
+                            <span class="arrow">📋</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 坐标轴调整菜单 -->
+                <div id="axisMenu" class="hidden">
+                    <div class="back-btn" onclick="backToMainMenu()">
+                        ← 返回主菜单
+                    </div>
+                    <h3 style="margin-bottom: 15px; color: #2d3748;">坐标轴样式设置</h3>
+                    
+                    <div class="submenu-section">
+                        <div class="submenu-header" onclick="toggleSubmenu('quadrantSection')">
+                            <span>象限模式</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="submenu-content active" id="quadrantSection">
+                            <div class="form-group">
+                                <label>选择象限</label>
+                                <select id="quadrantMode" onchange="updateQuadrantMode()" style="width: 100%; padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; background: white;">
+                                    <option value="1">第1象限 (X+, Y+)</option>
+                                    <option value="2">第2象限 (X-, Y+)</option>
+                                    <option value="3">第3象限 (X-, Y-)</option>
+                                    <option value="4">第4象限 (X+, Y-)</option>
+                                    <option value="12">上半轴 (X±, Y+)</option>
+                                    <option value="14">右半轴 (X+, Y±)</option>
+                                    <option value="1234">全坐标 (X±, Y±)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="font-size: 12px; color: #718096; margin-top: 5px;">
+                                <p>原点位置：</p>
+                                <ul style="margin: 5px 0 0 15px; padding-left: 0;">
+                                    <li>1象限: 左下 | 2象限: 右下</li>
+                                    <li>3象限: 右上 | 4象限: 左上</li>
+                                    <li>12象限: 下方中间 | 14象限: 左侧中间</li>
+                                    <li>1234象限: 正中</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+                    
+                    <div class="submenu-section">
+                        <div class="submenu-header" onclick="toggleSubmenu('xAxisSection')">
+                            <span>X轴设置</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="submenu-content active" id="xAxisSection">
+                            <div class="form-group">
+                                <label>X轴名称</label>
+                                <input type="text" id="xAxisName" placeholder="X轴" oninput="updateAxisNames()">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>最小值</label>
+                                    <input type="number" id="xMin" step="0.1" oninput="updateAxisRange()">
+                                </div>
+                                <div class="form-group">
+                                    <label>最大值</label>
+                                    <input type="number" id="xMax" step="0.1" oninput="updateAxisRange()">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>单元格数</label>
+                                <input type="number" id="xCells" min="1" max="20" value="10" oninput="updateAxisRange()">
+                            </div>
+                            <div class="form-group">
+                                <label>小数点位数</label>
+                                <input type="range" class="range-slider" id="xDecimalPlaces" min="0" max="7" value="2" oninput="updateAxisRange()">
+                                <div style="text-align: center; font-size: 12px; color: #718096; margin-top: 4px;" id="xDecimalPlacesDisplay">2位</div>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="xScientificNotation" onchange="updateAxisRange()">
+                                    启用科学计数法 (×10^n)
+                                </label>
+                            </div>
+                            <div class="form-group" id="xExponentGroup" style="display: none;">
+                                <label>指数 n</label>
+                                <input type="number" id="xExponent" min="-10" max="10" value="0" oninput="updateAxisRange()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="submenu-section">
+                        <div class="submenu-header" onclick="toggleSubmenu('yAxisSection')">
+                            <span>Y轴设置</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="submenu-content active" id="yAxisSection">
+                            <div class="form-group">
+                                <label>Y轴名称</label>
+                                <input type="text" id="yAxisName" placeholder="Y轴" oninput="updateAxisNames()">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>最小值</label>
+                                    <input type="number" id="yMin" step="0.1" oninput="updateAxisRange()">
+                                </div>
+                                <div class="form-group">
+                                    <label>最大值</label>
+                                    <input type="number" id="yMax" step="0.1" oninput="updateAxisRange()">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>单元格数</label>
+                                <input type="number" id="yCells" min="1" max="20" value="10" oninput="updateAxisRange()">
+                            </div>
+                            <div class="form-group">
+                                <label>小数点位数</label>
+                                <input type="range" class="range-slider" id="yDecimalPlaces" min="0" max="7" value="2" oninput="updateAxisRange()">
+                                <div style="text-align: center; font-size: 12px; color: #718096; margin-top: 4px;" id="yDecimalPlacesDisplay">2位</div>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="yScientificNotation" onchange="updateAxisRange()">
+                                    启用科学计数法 (×10^n)
+                                </label>
+                            </div>
+                            <div class="form-group" id="yExponentGroup" style="display: none;">
+                                <label>指数 n</label>
+                                <input type="number" id="yExponent" min="-10" max="10" value="0" oninput="updateAxisRange()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="form-group" style="padding: 0 15px;">
+                        <label>坐标轴字号</label>
+                        <input type="range" class="range-slider" id="axisFontSize" min="8" max="16" value="12" oninput="updateAxisRange()">
+                    </div>
+                </div>
+
+                <!-- 数据点调整菜单 -->
+                <div id="pointMenu" class="hidden" style="padding: 15px;">
+                    <div class="back-btn" onclick="backToMainMenu()">
+                        ← 返回主菜单
+                    </div>
+                    <h3 style="margin-bottom: 15px; color: #2d3748;">数据点设置</h3>
+                    
+                    <div class="form-group">
+                        <label>数据点ID</label>
+                        <div style="padding: 8px 12px; background: #f7fafc; border-radius: 4px; font-weight: 500;" id="pointIdDisplay">-</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>X值</label>
+                            <input type="number" id="pointX" step="0.1" oninput="updatePointData()">
+                        </div>
+                        <div class="form-group">
+                            <label>Y值</label>
+                            <input type="number" id="pointY" step="0.1" oninput="updatePointData()">
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="showAnnotation" onchange="toggleAnnotation()">
+                            显示数据标注
+                        </label>
+                    </div>
+
+                    <div id="annotationSettings" class="hidden">
+                        <div class="form-group">
+                            <label>标注文字大小</label>
+                            <input type="range" class="range-slider" id="annotationSize" min="8" max="16" value="10" oninput="updateAnnotation()">
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <button class="btn btn-danger btn-block" onclick="deleteSelectedPoint()">删除此数据点</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态
+        const state = {
+            zoom: 1,
+            panOffset: { x: 0, y: 0 },
+            isDragging: false,
+            isLocked: false,
+            lastMousePos: { x: 0, y: 0 },
+            
+            axis: {
+                xMin: 0,
+                xMax: 10,
+                yMin: 0,
+                yMax: 10,
+                xCells: 10,
+                yCells: 10,
+                xName: 'X',
+                yName: 'Y',
+                fontSize: 12,
+                gridStyle: 'none',
+                gridColor: '#e0e0e0',
+                xDecimalPlaces: 2,
+                yDecimalPlaces: 2,
+                xScientificNotation: false,
+                yScientificNotation: false,
+                xExponent: 0,
+                yExponent: 0,
+                quadrantMode: '1'
+            },
+            
+            points: [],
+            selectedPoint: null,
+            selectedAxis: null,
+            maxPoints: 300,
+            
+            curves: [],
+            maxCurves: 7,
+            curveCounter: 0,
+            
+            styles: [],
+            styleCounter: 0,
+            
+            title: '',
+            titleSize: 16,
+            legendSize: 12,
+            
+            canvasPadding: { top: 65, right: 95, bottom: 55, left: 105 }
+        };
+
+        let canvas, ctx;
+        let canvasRect;
+
+        function init() {
+            canvas = document.getElementById('mainCanvas');
+            ctx = canvas.getContext('2d');
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            canvas.addEventListener('wheel', handleWheel);
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('dblclick', handleDoubleClick);
+            canvas.addEventListener('contextmenu', handleRightClick);
+            
+            document.getElementById('xMin').value = state.axis.xMin;
+            document.getElementById('xMax').value = state.axis.xMax;
+            document.getElementById('yMin').value = state.axis.yMin;
+            document.getElementById('yMax').value = state.axis.yMax;
+            document.getElementById('xCells').value = state.axis.xCells;
+            document.getElementById('yCells').value = state.axis.yCells;
+            document.getElementById('xDecimalPlaces').value = state.axis.xDecimalPlaces;
+            document.getElementById('xDecimalPlacesDisplay').textContent = state.axis.xDecimalPlaces + '位';
+            document.getElementById('yDecimalPlaces').value = state.axis.yDecimalPlaces;
+            document.getElementById('yDecimalPlacesDisplay').textContent = state.axis.yDecimalPlaces + '位';
+            document.getElementById('xScientificNotation').checked = state.axis.xScientificNotation;
+            document.getElementById('yScientificNotation').checked = state.axis.yScientificNotation;
+            document.getElementById('xExponent').value = state.axis.xExponent;
+            document.getElementById('yExponent').value = state.axis.yExponent;
+            
+            initMenuStates();
+            
+            render();
+        }
+
+        function updateQuadrantMode() {
+            state.axis.quadrantMode = document.getElementById('quadrantMode').value;
+            render();
+        }
+
+        function initMenuStates() {
+            const menuContents = document.querySelectorAll('.menu-content');
+            menuContents.forEach(content => {
+                const header = content.previousElementSibling;
+                if (header && header.classList.contains('menu-header')) {
+                    if (!content.classList.contains('active')) {
+                        header.classList.add('collapsed');
+                    }
+                }
+            });
+        }
+
+        function resizeCanvas() {
+            const wrapper = canvas.parentElement;
+            const dpr = window.devicePixelRatio || 1;
+            
+            canvas.width = wrapper.clientWidth * dpr;
+            canvas.height = wrapper.clientHeight * dpr;
+            canvas.style.width = wrapper.clientWidth + 'px';
+            canvas.style.height = wrapper.clientHeight + 'px';
+            
+            ctx.scale(dpr, dpr);
+            canvasRect = canvas.getBoundingClientRect();
+            
+            render();
+        }
+
+        function getPlotArea() {
+            const padding = state.canvasPadding;
+            const quadrant = state.axis.quadrantMode;
+            
+            const rawLeft = padding.left;
+            const rawRight = canvasRect.width - padding.right;
+            const rawTop = padding.top;
+            const rawBottom = canvasRect.height - padding.bottom;
+            const rawWidth = rawRight - rawLeft;
+            const rawHeight = rawBottom - rawTop;
+            
+            const scale = 0.9;
+            const scaledLeft = rawLeft + rawWidth * (1 - scale) / 2;
+            const scaledRight = rawRight - rawWidth * (1 - scale) / 2;
+            const scaledTop = rawTop + rawHeight * (1 - scale) / 2;
+            const scaledBottom = rawBottom - rawHeight * (1 - scale) / 2;
+            const scaledWidth = scaledRight - scaledLeft;
+            const scaledHeight = scaledBottom - scaledTop;
+            
+            let originX, originY;
+            
+            switch(quadrant) {
+                case '1':
+                    originX = scaledLeft;
+                    originY = scaledBottom;
+                    break;
+                case '2':
+                    originX = scaledRight;
+                    originY = scaledBottom;
+                    break;
+                case '3':
+                    originX = scaledRight;
+                    originY = scaledTop;
+                    break;
+                case '4':
+                    originX = scaledLeft;
+                    originY = scaledTop;
+                    break;
+                case '12':
+                    originX = scaledLeft + scaledWidth / 2;
+                    originY = scaledBottom;
+                    break;
+                case '14':
+                    originX = scaledLeft;
+                    originY = scaledTop + scaledHeight / 2;
+                    break;
+                case '1234':
+                default:
+                    originX = scaledLeft + scaledWidth / 2;
+                    originY = scaledTop + scaledHeight / 2;
+                    break;
+            }
+            
+            return {
+                left: scaledLeft,
+                right: scaledRight,
+                top: scaledTop,
+                bottom: scaledBottom,
+                width: scaledWidth,
+                height: scaledHeight,
+                originX: originX,
+                originY: originY,
+                quadrant: quadrant
+            };
+        }
+
+        function dataToCanvas(x, y) {
+            const plot = getPlotArea();
+            const quadrant = plot.quadrant;
+            
+            const xDisplay = state.axis.xScientificNotation ? x / Math.pow(10, state.axis.xExponent) : x;
+            const yDisplay = state.axis.yScientificNotation ? y / Math.pow(10, state.axis.yExponent) : y;
+            
+            const xRange = state.axis.xMax - state.axis.xMin;
+            const yRange = state.axis.yMax - state.axis.yMin;
+            
+            let canvasX, canvasY;
+            
+            switch(quadrant) {
+                case '1':
+                    canvasX = plot.originX + (xDisplay / xRange) * plot.width;
+                    canvasY = plot.originY - (yDisplay / yRange) * plot.height;
+                    break;
+                case '2':
+                    canvasX = plot.originX + (xDisplay / xRange) * plot.width;
+                    canvasY = plot.originY - (yDisplay / yRange) * plot.height;
+                    break;
+                case '3':
+                    canvasX = plot.originX + (xDisplay / xRange) * plot.width;
+                    canvasY = plot.originY - (yDisplay / yRange) * plot.height;
+                    break;
+                case '4':
+                    canvasX = plot.originX + (xDisplay / xRange) * plot.width;
+                    canvasY = plot.originY - (yDisplay / yRange) * plot.height;
+                    break;
+                case '12':
+                    canvasX = plot.originX + (xDisplay / xRange) * plot.width;
+                    canvasY = plot.originY - (yDisplay / yRange) * plot.height;
+                    break;
+                case '14':
+                    canvasX = plot.originX + (xDisplay / xRange) * plot.width;
+                    canvasY = plot.originY - (yDisplay / yRange) * plot.height;
+                    break;
+                case '1234':
+                default:
+                    canvasX = plot.originX + (xDisplay / xRange) * plot.width;
+                    canvasY = plot.originY - (yDisplay / yRange) * plot.height;
+                    break;
+            }
+            
+            return { x: canvasX, y: canvasY };
+        }
+
+        function canvasToData(canvasX, canvasY) {
+            const plot = getPlotArea();
+            const quadrant = plot.quadrant;
+            const xRange = state.axis.xMax - state.axis.xMin;
+            const yRange = state.axis.yMax - state.axis.yMin;
+            
+            let xDisplay, yDisplay;
+            
+            switch(quadrant) {
+                case '1':
+                    xDisplay = ((canvasX - plot.originX) / plot.width) * xRange;
+                    yDisplay = -((canvasY - plot.originY) / plot.height) * yRange;
+                    break;
+                case '2':
+                    xDisplay = ((canvasX - plot.originX) / plot.width) * xRange;
+                    yDisplay = -((canvasY - plot.originY) / plot.height) * yRange;
+                    break;
+                case '3':
+                    xDisplay = ((canvasX - plot.originX) / plot.width) * xRange;
+                    yDisplay = -((canvasY - plot.originY) / plot.height) * yRange;
+                    break;
+                case '4':
+                    xDisplay = ((canvasX - plot.originX) / plot.width) * xRange;
+                    yDisplay = -((canvasY - plot.originY) / plot.height) * yRange;
+                    break;
+                case '12':
+                    xDisplay = ((canvasX - plot.originX) / plot.width) * xRange;
+                    yDisplay = -((canvasY - plot.originY) / plot.height) * yRange;
+                    break;
+                case '14':
+                    xDisplay = ((canvasX - plot.originX) / plot.width) * xRange;
+                    yDisplay = -((canvasY - plot.originY) / plot.height) * yRange;
+                    break;
+                case '1234':
+                default:
+                    xDisplay = ((canvasX - plot.originX) / plot.width) * xRange;
+                    yDisplay = -((canvasY - plot.originY) / plot.height) * yRange;
+                    break;
+            }
+            
+            const x = state.axis.xScientificNotation ? xDisplay * Math.pow(10, state.axis.xExponent) : xDisplay;
+            const y = state.axis.yScientificNotation ? yDisplay * Math.pow(10, state.axis.yExponent) : yDisplay;
+            
+            return { x, y };
+        }
+
+        function isPointInPlotArea(x, y) {
+            const plot = getPlotArea();
+            return x >= plot.left && x <= plot.right && y >= plot.top && y <= plot.bottom;
+        }
+
+        function isPointOnAxis(x, y) {
+            const plot = getPlotArea();
+            const threshold = 15;
+            const quadrant = plot.quadrant;
+            
+            const isYAxisAtLeft = quadrant === '1' || quadrant === '4' || quadrant === '14';
+            const isYAxisAtRight = quadrant === '2' || quadrant === '3';
+            const isYAxisAtOriginX = quadrant === '12' || quadrant === '1234';
+            
+            const isXAxisAtBottom = quadrant === '1' || quadrant === '2' || quadrant === '12';
+            const isXAxisAtTop = quadrant === '3' || quadrant === '4';
+            const isXAxisAtOriginY = quadrant === '14' || quadrant === '1234';
+            
+            if (isYAxisAtLeft) {
+                if (Math.abs(x - plot.left) < threshold && y >= plot.top && y <= plot.bottom) return 'y';
+            } else if (isYAxisAtRight) {
+                if (Math.abs(x - plot.right) < threshold && y >= plot.top && y <= plot.bottom) return 'y';
+            } else {
+                if (Math.abs(x - plot.originX) < threshold && y >= plot.top && y <= plot.bottom) return 'y';
+            }
+            
+            if (isXAxisAtBottom) {
+                if (Math.abs(y - plot.bottom) < threshold && x >= plot.left && x <= plot.right) return 'x';
+            } else if (isXAxisAtTop) {
+                if (Math.abs(y - plot.top) < threshold && x >= plot.left && x <= plot.right) return 'x';
+            } else {
+                if (Math.abs(y - plot.originY) < threshold && x >= plot.left && x <= plot.right) return 'x';
+            }
+            
+            return null;
+        }
+
+        function findPointAtPosition(x, y) {
+            const threshold = 10;
+            for (let i = state.points.length - 1; i >= 0; i--) {
+                const p = state.points[i];
+                const canvasPos = dataToCanvas(p.x, p.y);
+                const dist = Math.sqrt(Math.pow(x - canvasPos.x, 2) + Math.pow(y - canvasPos.y, 2));
+                if (dist < threshold) {
+                    return p;
+                }
+            }
+            return null;
+        }
+
+        function screenToCanvas(screenX, screenY) {
+            return {
+                x: (screenX - state.panOffset.x) / state.zoom,
+                y: (screenY - state.panOffset.y) / state.zoom
+            };
+        }
+
+        function handleWheel(e) {
+            e.preventDefault();
+            if (state.isLocked) return;
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const newZoom = Math.max(0.1, Math.min(5, state.zoom * delta));
+            
+            const mouseX = e.clientX - canvasRect.left;
+            const mouseY = e.clientY - canvasRect.top;
+            
+            state.panOffset.x = mouseX - (mouseX - state.panOffset.x) * (newZoom / state.zoom);
+            state.panOffset.y = mouseY - (mouseY - state.panOffset.y) * (newZoom / state.zoom);
+            
+            state.zoom = newZoom;
+            document.getElementById('zoomInfo').textContent = `缩放: ${Math.round(state.zoom * 100)}%`;
+            render();
+        }
+
+        function handleMouseDown(e) {
+            const rawX = e.clientX - canvasRect.left;
+            const rawY = e.clientY - canvasRect.top;
+            const { x, y } = screenToCanvas(rawX, rawY);
+            
+            const axisType = isPointOnAxis(x, y);
+            if (axisType && e.button === 0) {
+                if (state.selectedAxis === axisType) {
+                    state.selectedAxis = null;
+                    backToMainMenu();
+                } else {
+                    state.selectedAxis = axisType;
+                    showAxisMenu();
+                }
+                render();
+                return;
+            }
+            
+            const point = findPointAtPosition(x, y);
+            if (point && e.button === 0) {
+                if (state.selectedPoint === point) {
+                    state.selectedPoint = null;
+                    backToMainMenu();
+                } else {
+                    state.selectedPoint = point;
+                    showPointMenu(point);
+                }
+                render();
+                return;
+            }
+            
+            if (isPointInPlotArea(x, y) && e.button === 0 && !point && !state.isLocked) {
+                state.isDragging = true;
+                state.lastMousePos = { x: e.clientX, y: e.clientY };
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (state.isDragging) {
+                const dx = e.clientX - state.lastMousePos.x;
+                const dy = e.clientY - state.lastMousePos.y;
+                
+                state.panOffset.x += dx;
+                state.panOffset.y += dy;
+                
+                state.lastMousePos = { x: e.clientX, y: e.clientY };
+                render();
+            }
+        }
+
+        function handleMouseUp(e) {
+            state.isDragging = false;
+        }
+
+        function toggleLock() {
+            state.isLocked = !state.isLocked;
+            const btn = document.getElementById('lockBtn');
+            if (state.isLocked) {
+                btn.textContent = '🔒 已锁定';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-danger');
+                canvas.style.cursor = 'default';
+            } else {
+                btn.textContent = '🔓 未锁定';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                canvas.style.cursor = 'crosshair';
+            }
+        }
+
+        function resetCanvas() {
+            state.zoom = 1;
+            state.panOffset = { x: 0, y: 0 };
+            document.getElementById('zoomInfo').textContent = '缩放: 100%';
+            render();
+        }
+
+        function handleDoubleClick(e) {
+            const rawX = e.clientX - canvasRect.left;
+            const rawY = e.clientY - canvasRect.top;
+            const { x, y } = screenToCanvas(rawX, rawY);
+            
+            if (isPointInPlotArea(x, y)) {
+                const point = findPointAtPosition(x, y);
+                if (!point && state.points.length < state.maxPoints) {
+                    const data = canvasToData(x, y);
+                    addPoint(data.x, data.y);
+                }
+            }
+        }
+
+        function handleRightClick(e) {
+            e.preventDefault();
+            const rawX = e.clientX - canvasRect.left;
+            const rawY = e.clientY - canvasRect.top;
+            const { x, y } = screenToCanvas(rawX, rawY);
+            
+            const point = findPointAtPosition(x, y);
+            if (point) {
+                deletePoint(point);
+            }
+        }
+
+        function addPoint(x, y) {
+            if (state.points.length >= state.maxPoints) return;
+            
+            const id = state.points.length + 1;
+            const point = {
+                id: id,
+                x: parseFloat(x.toFixed(3)),
+                y: parseFloat(y.toFixed(3)),
+                style: 0,
+                showAnnotation: false,
+                annotationSize: 10
+            };
+            
+            state.points.push(point);
+            updatePointCount();
+            renderCurveList();
+            renderStyleList();
+            render();
+        }
+
+        function deletePoint(point) {
+            const index = state.points.indexOf(point);
+            if (index > -1) {
+                state.points.splice(index, 1);
+                state.points.forEach((p, i) => p.id = i + 1);
+                
+                if (state.selectedPoint === point) {
+                    state.selectedPoint = null;
+                    backToMainMenu();
+                }
+                
+                updatePointCount();
+                renderCurveList();
+                renderStyleList();
+                render();
+            }
+        }
+
+        function updatePointCount() {
+            document.getElementById('pointCount').textContent = `数据点: ${state.points.length}/${state.maxPoints}`;
+        }
+
+        function showAxisMenu() {
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('axisMenu').classList.remove('hidden');
+            document.getElementById('pointMenu').classList.add('hidden');
+            
+            if (state.selectedAxis === 'x') {
+                document.getElementById('xAxisSection').classList.add('active');
+                document.getElementById('yAxisSection').classList.remove('active');
+            } else if (state.selectedAxis === 'y') {
+                document.getElementById('yAxisSection').classList.add('active');
+                document.getElementById('xAxisSection').classList.remove('active');
+            } else {
+                document.getElementById('xAxisSection').classList.add('active');
+                document.getElementById('yAxisSection').classList.add('active');
+            }
+        }
+
+        function showPointMenu(point) {
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('axisMenu').classList.add('hidden');
+            document.getElementById('pointMenu').classList.remove('hidden');
+            
+            document.getElementById('pointIdDisplay').textContent = `P${point.id}`;
+            document.getElementById('pointX').value = point.x;
+            document.getElementById('pointY').value = point.y;
+            document.getElementById('showAnnotation').checked = point.showAnnotation;
+            document.getElementById('annotationSize').value = point.annotationSize;
+            
+            if (point.showAnnotation) {
+                document.getElementById('annotationSettings').classList.remove('hidden');
+            } else {
+                document.getElementById('annotationSettings').classList.add('hidden');
+            }
+        }
+
+        function backToMainMenu() {
+            document.getElementById('mainMenu').classList.remove('hidden');
+            document.getElementById('axisMenu').classList.add('hidden');
+            document.getElementById('pointMenu').classList.add('hidden');
+            
+            state.selectedPoint = null;
+            state.selectedAxis = null;
+            render();
+        }
+
+        function updateAxisRange() {
+            state.axis.xMin = parseFloat(document.getElementById('xMin').value) || 0;
+            state.axis.xMax = parseFloat(document.getElementById('xMax').value) || 10;
+            state.axis.yMin = parseFloat(document.getElementById('yMin').value) || 0;
+            state.axis.yMax = parseFloat(document.getElementById('yMax').value) || 10;
+            state.axis.xCells = parseInt(document.getElementById('xCells').value) || 10;
+            state.axis.yCells = parseInt(document.getElementById('yCells').value) || 10;
+            state.axis.fontSize = parseInt(document.getElementById('axisFontSize').value) || 12;
+            const xDecimalVal = parseInt(document.getElementById('xDecimalPlaces').value);
+            const yDecimalVal = parseInt(document.getElementById('yDecimalPlaces').value);
+            state.axis.xDecimalPlaces = isNaN(xDecimalVal) ? 2 : xDecimalVal;
+            state.axis.yDecimalPlaces = isNaN(yDecimalVal) ? 2 : yDecimalVal;
+            state.axis.xScientificNotation = document.getElementById('xScientificNotation').checked;
+            state.axis.yScientificNotation = document.getElementById('yScientificNotation').checked;
+            state.axis.xExponent = parseInt(document.getElementById('xExponent').value) || 0;
+            state.axis.yExponent = parseInt(document.getElementById('yExponent').value) || 0;
+            
+            document.getElementById('xDecimalPlacesDisplay').textContent = state.axis.xDecimalPlaces + '位';
+            document.getElementById('yDecimalPlacesDisplay').textContent = state.axis.yDecimalPlaces + '位';
+            
+            const xExponentGroup = document.getElementById('xExponentGroup');
+            if (state.axis.xScientificNotation) {
+                xExponentGroup.style.display = 'block';
+            } else {
+                xExponentGroup.style.display = 'none';
+            }
+            
+            const yExponentGroup = document.getElementById('yExponentGroup');
+            if (state.axis.yScientificNotation) {
+                yExponentGroup.style.display = 'block';
+            } else {
+                yExponentGroup.style.display = 'none';
+            }
+            
+            render();
+        }
+
+        function updateAxisNames() {
+            state.axis.xName = document.getElementById('xAxisName').value || 'X';
+            state.axis.yName = document.getElementById('yAxisName').value || 'Y';
+            render();
+        }
+
+        function updatePointData() {
+            if (!state.selectedPoint) return;
+            
+            state.selectedPoint.x = parseFloat(document.getElementById('pointX').value) || 0;
+            state.selectedPoint.y = parseFloat(document.getElementById('pointY').value) || 0;
+            render();
+        }
+
+        function toggleAnnotation() {
+            if (!state.selectedPoint) return;
+            
+            state.selectedPoint.showAnnotation = document.getElementById('showAnnotation').checked;
+            
+            if (state.selectedPoint.showAnnotation) {
+                document.getElementById('annotationSettings').classList.remove('hidden');
+            } else {
+                document.getElementById('annotationSettings').classList.add('hidden');
+            }
+            render();
+        }
+
+        function updateAnnotation() {
+            if (!state.selectedPoint) return;
+            
+            state.selectedPoint.annotationSize = parseInt(document.getElementById('annotationSize').value);
+            render();
+        }
+
+        function deleteSelectedPoint() {
+            if (state.selectedPoint) {
+                deletePoint(state.selectedPoint);
+            }
+        }
+
+        function toggleMenu(menuId) {
+            const content = document.getElementById(menuId);
+            const header = content.previousElementSibling;
+            
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                header.classList.add('collapsed');
+            } else {
+                content.classList.add('active');
+                header.classList.remove('collapsed');
+            }
+        }
+
+        function toggleSubmenu(sectionId) {
+            const content = document.getElementById(sectionId);
+            const header = content.previousElementSibling;
+            
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                header.classList.add('collapsed');
+            } else {
+                content.classList.add('active');
+                header.classList.remove('collapsed');
+            }
+        }
+
+        function addCurve() {
+            if (state.curves.length >= state.maxCurves) return;
+            
+            state.curveCounter++;
+            const curve = {
+                id: state.curveCounter,
+                name: `曲线${state.curves.length + 1}`,
+                points: [],
+                lineWidth: 2,
+                color: '#3182ce',
+                lineStyle: 'solid',
+                smooth: false,
+                showLegend: true
+            };
+            
+            state.curves.push(curve);
+            renderCurveList();
+            render();
+        }
+
+        function renderCurveList() {
+            const container = document.getElementById('curveList');
+            
+            const openStates = [];
+            const scrollPositions = {};
+            state.curves.forEach((curve, index) => {
+                const body = document.getElementById(`curveBody${index}`);
+                if (body && body.classList.contains('active')) {
+                    openStates.push(index);
+                    const checkboxGroup = body.querySelector('.checkbox-group');
+                    if (checkboxGroup) {
+                        scrollPositions[index] = checkboxGroup.scrollTop;
+                    }
+                }
+            });
+            
+            container.innerHTML = '';
+            
+            state.curves.forEach((curve, index) => {
+                const div = document.createElement('div');
+                div.className = 'curve-item';
+                div.innerHTML = `
+                    <div class="curve-header" onclick="toggleCurveBody(${index})">
+                        <span>${curve.name}</span>
+                        <span class="info-badge">${curve.points.length}点</span>
+                    </div>
+                    <div class="curve-body ${openStates.includes(index) ? 'active' : ''}" id="curveBody${index}">
+                        <div class="form-group">
+                            <label>曲线名称</label>
+                            <input type="text" value="${curve.name}" oninput="updateCurveName(${index}, this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>选择数据点</label>
+                            <button class="btn btn-secondary" style="margin-bottom: 8px; padding: 4px 12px; font-size: 12px;" 
+                                onclick="toggleSelectAllCurvePoints(${index})">${state.points.length > 0 && state.points.every(p => curve.points.includes(p.id)) ? '取消全选' : '全选所有点'}</button>
+                            <div class="checkbox-group" id="curvePoints${index}">
+                                ${renderPointCheckboxes(curve.points)}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>线条粗细</label>
+                            <input type="range" class="range-slider" min="1" max="10" value="${curve.lineWidth}" 
+                                oninput="updateCurveWidth(${index}, this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>线条颜色</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" value="${curve.color}" onchange="updateCurveColor(${index}, this.value)">
+                                <div class="color-preview" style="background: ${curve.color}"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>线条样式</label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn ${curve.lineStyle === 'solid' ? 'active' : ''}" 
+                                    onclick="updateCurveLineStyle(${index}, 'solid')">实线</button>
+                                <button class="toggle-btn ${curve.lineStyle === 'dashed' ? 'active' : ''}" 
+                                    onclick="updateCurveLineStyle(${index}, 'dashed')">虚线</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>连接方式</label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn ${!curve.smooth ? 'active' : ''}" 
+                                    onclick="updateCurveSmooth(${index}, false)">折线</button>
+                                <button class="toggle-btn ${curve.smooth ? 'active' : ''}" 
+                                    onclick="updateCurveSmooth(${index}, true)">平滑</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" ${curve.showLegend ? 'checked' : ''} 
+                                    onchange="updateCurveLegend(${index}, this.checked)">
+                                显示图例
+                            </label>
+                        </div>
+                        <button class="btn btn-danger btn-block" onclick="deleteCurve(${index})">删除曲线</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            
+            openStates.forEach(index => {
+                const checkboxGroup = document.getElementById(`curvePoints${index}`);
+                if (checkboxGroup && scrollPositions[index] !== undefined) {
+                    checkboxGroup.scrollTop = scrollPositions[index];
+                }
+            });
+            
+            document.getElementById('addCurveBtn').style.display = 
+                state.curves.length >= state.maxCurves ? 'none' : 'block';
+        }
+
+        function renderPointCheckboxes(selectedPoints) {
+            return state.points.map(p => `
+                <label class="checkbox-item">
+                    <input type="checkbox" ${selectedPoints.includes(p.id) ? 'checked' : ''} 
+                        onchange="toggleCurvePoint(${p.id}, this.checked)">
+                    P${p.id}
+                </label>
+            `).join('');
+        }
+
+        function toggleCurveBody(index) {
+            const body = document.getElementById(`curveBody${index}`);
+            body.classList.toggle('active');
+        }
+
+        function updateCurveName(index, name) {
+            state.curves[index].name = name;
+            render();
+        }
+
+        function updateCurveWidth(index, width) {
+            state.curves[index].lineWidth = parseInt(width);
+            render();
+        }
+
+        function updateCurveColor(index, color) {
+            state.curves[index].color = color;
+            renderCurveList();
+            render();
+        }
+
+        function updateCurveLineStyle(index, style) {
+            state.curves[index].lineStyle = style;
+            renderCurveList();
+            render();
+        }
+
+        function updateCurveSmooth(index, smooth) {
+            state.curves[index].smooth = smooth;
+            renderCurveList();
+            render();
+        }
+
+        function updateCurveLegend(index, show) {
+            state.curves[index].showLegend = show;
+            render();
+        }
+
+        function toggleSelectAllCurvePoints(index) {
+            const curve = state.curves[index];
+            const allPointIds = state.points.map(p => p.id);
+            const allSelected = allPointIds.length > 0 && allPointIds.every(id => curve.points.includes(id));
+            
+            if (allSelected) {
+                curve.points = [];
+            } else {
+                curve.points = [...allPointIds];
+            }
+            renderCurveList();
+            render();
+        }
+
+        function toggleCurvePoint(pointId, checked) {
+            state.curves.forEach(curve => {
+                if (checked) {
+                    if (!curve.points.includes(pointId)) {
+                        curve.points.push(pointId);
+                    }
+                } else {
+                    const idx = curve.points.indexOf(pointId);
+                    if (idx > -1) {
+                        curve.points.splice(idx, 1);
+                    }
+                }
+            });
+            renderCurveList();
+            render();
+        }
+
+        function deleteCurve(index) {
+            state.curves.splice(index, 1);
+            renderCurveList();
+            render();
+        }
+
+        function addStyle() {
+            state.styleCounter++;
+            const style = {
+                id: state.styleCounter,
+                name: `样式${state.styles.length + 1}`,
+                points: [],
+                shape: 'filledCircle',
+                size: 8,
+                color: '#3182ce'
+            };
+            
+            state.styles.push(style);
+            renderStyleList();
+            render();
+        }
+
+        function renderStyleList() {
+            const container = document.getElementById('styleList');
+            
+            const openStates = [];
+            const scrollPositions = {};
+            state.styles.forEach((style, index) => {
+                const body = document.getElementById(`styleBody${index}`);
+                if (body && body.classList.contains('active')) {
+                    openStates.push(index);
+                    const checkboxGroup = body.querySelector('.checkbox-group');
+                    if (checkboxGroup) {
+                        scrollPositions[index] = checkboxGroup.scrollTop;
+                    }
+                }
+            });
+            
+            container.innerHTML = '';
+            
+            const shapes = [
+                { value: 'filledCircle', label: '实心圆点' },
+                { value: 'hollowCircle', label: '空心圆点' },
+                { value: 'filledSquare', label: '实心方形点' },
+                { value: 'hollowSquare', label: '空心方形点' },
+                { value: 'filledTriangle', label: '实心三角形点' },
+                { value: 'hollowTriangle', label: '空心三角形点' },
+                { value: 'cross', label: '×形点' }
+            ];
+            
+            state.styles.forEach((style, index) => {
+                const div = document.createElement('div');
+                div.className = 'style-item';
+                div.innerHTML = `
+                    <div class="style-header" onclick="toggleStyleBody(${index})">
+                        <span>${style.name}</span>
+                    </div>
+                    <div class="style-body ${openStates.includes(index) ? 'active' : ''}" id="styleBody${index}">
+                        <div class="form-group">
+                            <label>选择数据点</label>
+                            <button class="btn btn-secondary" style="margin-bottom: 8px; padding: 4px 12px; font-size: 12px;" 
+                                onclick="toggleSelectAllStylePoints(${index})">${state.points.length > 0 && state.points.every(p => style.points.includes(p.id)) ? '取消全选' : '全选所有点'}</button>
+                            <div class="checkbox-group" id="stylePoints${index}">
+                                ${renderStylePointCheckboxes(style.points)}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>数据点形状</label>
+                            <select onchange="updateStyleShape(${index}, this.value)">
+                                ${shapes.map(s => `<option value="${s.value}" ${style.shape === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>数据点大小</label>
+                            <input type="range" class="range-slider" min="4" max="20" value="${style.size}" 
+                                oninput="updateStyleSize(${index}, this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>数据点颜色</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" value="${style.color}" onchange="updateStyleColor(${index}, this.value)">
+                                <div class="color-preview" style="background: ${style.color}"></div>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger btn-block" onclick="deleteStyle(${index})">删除样式</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            
+            openStates.forEach(index => {
+                const checkboxGroup = document.getElementById(`stylePoints${index}`);
+                if (checkboxGroup && scrollPositions[index] !== undefined) {
+                    checkboxGroup.scrollTop = scrollPositions[index];
+                }
+            });
+        }
+
+        function renderStylePointCheckboxes(selectedPoints) {
+            return state.points.map(p => `
+                <label class="checkbox-item">
+                    <input type="checkbox" ${selectedPoints.includes(p.id) ? 'checked' : ''} 
+                        onchange="toggleStylePoint(${p.id}, this.checked)">
+                    P${p.id}
+                </label>
+            `).join('');
+        }
+
+        function toggleStyleBody(index) {
+            const body = document.getElementById(`styleBody${index}`);
+            body.classList.toggle('active');
+        }
+
+        function updateStyleShape(index, shape) {
+            state.styles[index].shape = shape;
+            render();
+        }
+
+        function updateStyleSize(index, size) {
+            state.styles[index].size = parseInt(size);
+            render();
+        }
+
+        function updateStyleColor(index, color) {
+            state.styles[index].color = color;
+            renderStyleList();
+            render();
+        }
+
+        function toggleSelectAllStylePoints(index) {
+            const style = state.styles[index];
+            const allPointIds = state.points.map(p => p.id);
+            const allSelected = allPointIds.length > 0 && allPointIds.every(id => style.points.includes(id));
+            
+            if (allSelected) {
+                style.points = [];
+            } else {
+                style.points = [...allPointIds];
+            }
+            renderStyleList();
+            render();
+        }
+
+        function toggleStylePoint(pointId, checked) {
+            state.styles.forEach(style => {
+                if (checked) {
+                    if (!style.points.includes(pointId)) {
+                        style.points.push(pointId);
+                    }
+                } else {
+                    const idx = style.points.indexOf(pointId);
+                    if (idx > -1) {
+                        style.points.splice(idx, 1);
+                    }
+                }
+            });
+            render();
+        }
+
+        function deleteStyle(index) {
+            state.styles.splice(index, 1);
+            renderStyleList();
+            render();
+        }
+
+        function updateGridStyle() {
+            state.axis.gridStyle = document.getElementById('gridStyle').value;
+            state.axis.gridColor = document.getElementById('gridColor').value;
+            document.getElementById('gridColorPreview').style.background = state.axis.gridColor;
+            render();
+        }
+
+        function updateTitle() {
+            state.title = document.getElementById('figureTitle').value;
+            state.titleSize = parseInt(document.getElementById('titleSize').value);
+            render();
+        }
+
+        function updateLegendSize() {
+            state.legendSize = parseInt(document.getElementById('legendSize').value);
+            render();
+        }
+
+        function formatText(text) {
+            return text.replace(/[\u4e00-\u9fa5]+/g, match => {
+                return `<span style="font-family: SimSun, serif">${match}</span>`;
+            });
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvasRect.width, canvasRect.height);
+            
+            ctx.save();
+            ctx.translate(state.panOffset.x, state.panOffset.y);
+            ctx.scale(state.zoom, state.zoom);
+            
+            const plot = getPlotArea();
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(plot.left, plot.top, plot.width, plot.height);
+            
+            drawGrid(plot);
+            drawAxes(plot);
+            drawCurves(plot);
+            drawPoints(plot);
+            drawAnnotations(plot);
+            drawTitle(plot);
+            drawLegend(plot);
+            
+            ctx.restore();
+        }
+
+        function drawGrid(plot) {
+            if (state.axis.gridStyle === 'none') return;
+            
+            ctx.strokeStyle = state.axis.gridColor;
+            ctx.lineWidth = 0.5;
+            
+            if (state.axis.gridStyle === 'dashed') {
+                ctx.setLineDash([5, 5]);
+            } else {
+                ctx.setLineDash([]);
+            }
+            
+            const xStep = plot.width / state.axis.xCells;
+            const yStep = plot.height / state.axis.yCells;
+            
+            ctx.beginPath();
+            for (let i = 1; i < state.axis.xCells; i++) {
+                const x = plot.left + i * xStep;
+                ctx.moveTo(x, plot.top);
+                ctx.lineTo(x, plot.bottom);
+            }
+            for (let i = 1; i < state.axis.yCells; i++) {
+                const y = plot.top + i * yStep;
+                ctx.moveTo(plot.left, y);
+                ctx.lineTo(plot.right, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function drawAxes(plot) {
+            const quadrant = plot.quadrant;
+            ctx.strokeStyle = '#2d3748';
+            ctx.lineWidth = 1.5;
+            
+            ctx.fillStyle = '#2d3748';
+            ctx.font = `${state.axis.fontSize}px "Times New Roman", SimSun, serif`;
+            const xDecimalPlaces = state.axis.xDecimalPlaces;
+            const yDecimalPlaces = state.axis.yDecimalPlaces;
+            
+            const xStep = plot.width / state.axis.xCells;
+            const yStep = plot.height / state.axis.yCells;
+            const xValueStep = (state.axis.xMax - state.axis.xMin) / state.axis.xCells;
+            const yValueStep = (state.axis.yMax - state.axis.yMin) / state.axis.yCells;
+            
+            const isXAxisAtBottom = quadrant === '1' || quadrant === '2' || quadrant === '12';
+            const isXAxisAtTop = quadrant === '3' || quadrant === '4';
+            const isXAxisAtOriginY = quadrant === '14' || quadrant === '1234';
+            
+            const isYAxisAtLeft = quadrant === '1' || quadrant === '4' || quadrant === '14';
+            const isYAxisAtRight = quadrant === '2' || quadrant === '3';
+            const isYAxisAtOriginX = quadrant === '12' || quadrant === '1234';
+            
+            let xAxisY, xTickDir, xTickSign;
+            if (isXAxisAtBottom) {
+                xAxisY = plot.bottom;
+                xTickDir = 1;
+            } else if (isXAxisAtTop) {
+                xAxisY = plot.top;
+                xTickDir = -1;
+            } else {
+                xAxisY = plot.originY;
+                xTickDir = 0;
+            }
+            
+            let yAxisX, yTickDir;
+            if (isYAxisAtLeft) {
+                yAxisX = plot.left;
+                yTickDir = -1;
+            } else if (isYAxisAtRight) {
+                yAxisX = plot.right;
+                yTickDir = 1;
+            } else {
+                yAxisX = plot.originX;
+                yTickDir = 0;
+            }
+            
+            ctx.beginPath();
+            ctx.moveTo(plot.left, xAxisY);
+            ctx.lineTo(plot.right, xAxisY);
+            ctx.stroke();
+            
+            for (let i = 0; i <= state.axis.xCells; i++) {
+                const x = plot.left + i * xStep;
+                ctx.beginPath();
+                if (xTickDir === 0) {
+                    ctx.moveTo(x, xAxisY - 3);
+                    ctx.lineTo(x, xAxisY + 3);
+                } else {
+                    ctx.moveTo(x, xAxisY);
+                    ctx.lineTo(x, xAxisY + xTickDir * 5);
+                }
+                ctx.stroke();
+            }
+            
+            ctx.beginPath();
+            ctx.moveTo(yAxisX, plot.top);
+            ctx.lineTo(yAxisX, plot.bottom);
+            ctx.stroke();
+            
+            for (let i = 0; i <= state.axis.yCells; i++) {
+                const y = plot.bottom - i * yStep;
+                ctx.beginPath();
+                if (yTickDir === 0) {
+                    ctx.moveTo(yAxisX - 3, y);
+                    ctx.lineTo(yAxisX + 3, y);
+                } else {
+                    ctx.moveTo(yAxisX, y);
+                    ctx.lineTo(yAxisX + yTickDir * 5, y);
+                }
+                ctx.stroke();
+            }
+            
+            ctx.font = `bold ${state.axis.fontSize + 2}px "Times New Roman", SimSun, serif`;
+            
+            let xLabelX, xLabelY, xAlign, xBaseline;
+            if (quadrant === '1234') {
+                xLabelX = plot.right - 20;
+                xLabelY = xAxisY + 30;
+                xAlign = 'right';
+                xBaseline = 'top';
+            } else if (isXAxisAtBottom) {
+                xLabelX = plot.left + plot.width / 2;
+                xLabelY = plot.bottom + 32;
+                xAlign = 'center';
+                xBaseline = 'top';
+            } else if (isXAxisAtTop) {
+                xLabelX = plot.left + plot.width / 2;
+                xLabelY = plot.top - 37;
+                xAlign = 'center';
+                xBaseline = 'bottom';
+            } else {
+                xLabelX = plot.left + plot.width / 2;
+                xLabelY = xAxisY + 32;
+                xAlign = 'center';
+                xBaseline = 'top';
+            }
+            ctx.textAlign = xAlign;
+            ctx.textBaseline = xBaseline;
+            ctx.fillText(state.axis.xName, xLabelX, xLabelY);
+            
+            const yLabelOffset = 33 + yDecimalPlaces * 6;
+            
+            let yLabelX, yLabelY;
+            if (quadrant === '1234') {
+                yLabelX = yAxisX - yLabelOffset;
+                yLabelY = plot.top + 20;
+            } else if (isYAxisAtOriginX) {
+                yLabelX = yAxisX - yLabelOffset;
+                yLabelY = plot.top + plot.height / 2;
+            } else if (isYAxisAtLeft) {
+                yLabelX = yAxisX - yLabelOffset;
+                yLabelY = plot.top + plot.height / 2;
+            } else {
+                yLabelX = yAxisX + yLabelOffset;
+                yLabelY = plot.top + plot.height / 2;
+            }
+            ctx.save();
+            ctx.translate(yLabelX, yLabelY);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = quadrant === '1234' ? 'left' : 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(state.axis.yName, 0, 0);
+            ctx.restore();
+            
+            ctx.font = `${state.axis.fontSize}px "Times New Roman", SimSun, serif`;
+            
+            if (isXAxisAtBottom || isXAxisAtOriginY) {
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                const halfX = state.axis.xCells / 2;
+                for (let i = 0; i <= state.axis.xCells; i++) {
+                    const x = plot.left + i * xStep;
+                    let value;
+                    if (quadrant === '12' || quadrant === '1234') {
+                        value = (i - halfX) * xValueStep;
+                    } else if (quadrant === '2') {
+                        value = (i - state.axis.xCells) * xValueStep;
+                    } else {
+                        value = i * xValueStep;
+                    }
+                    if (quadrant === '1234' || quadrant === '14') {
+                        if (Math.abs(x - plot.originX) < 1) continue;
+                    }
+                    ctx.fillText(value.toFixed(xDecimalPlaces), x, xAxisY + 8);
+                }
+            }
+            
+            if (isXAxisAtTop) {
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                for (let i = 0; i <= state.axis.xCells; i++) {
+                    const x = plot.left + i * xStep;
+                    let value;
+                    if (quadrant === '3') {
+                        value = (i - state.axis.xCells) * xValueStep;
+                    } else {
+                        value = i * xValueStep;
+                    }
+                    ctx.fillText(value.toFixed(xDecimalPlaces), x, plot.top - 8);
+                }
+            }
+            
+            if (isYAxisAtLeft || isYAxisAtOriginX) {
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                const halfY = state.axis.yCells / 2;
+                for (let i = 0; i <= state.axis.yCells; i++) {
+                    const y = plot.bottom - i * yStep;
+                    let value;
+                    if (quadrant === '14' || quadrant === '1234') {
+                        value = (i - halfY) * yValueStep;
+                    } else if (quadrant === '3' || quadrant === '4') {
+                        value = (i - state.axis.yCells) * yValueStep;
+                    } else {
+                        value = i * yValueStep;
+                    }
+                    if (quadrant === '1234' || quadrant === '12') {
+                        if (Math.abs(y - plot.originY) < 1) continue;
+                    }
+                    ctx.fillText(value.toFixed(yDecimalPlaces), yAxisX - 8, y);
+                }
+            }
+            
+            if (isYAxisAtRight) {
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                for (let i = 0; i <= state.axis.yCells; i++) {
+                    const y = plot.bottom - i * yStep;
+                    let value;
+                    if (quadrant === '3') {
+                        value = (i - state.axis.yCells) * yValueStep;
+                    } else {
+                        value = i * yValueStep;
+                    }
+                    ctx.fillText(value.toFixed(yDecimalPlaces), plot.right + 8, y);
+                }
+            }
+            
+            if (state.axis.xScientificNotation && state.axis.xExponent !== 0) {
+                ctx.font = `${state.axis.fontSize}px "Times New Roman", SimSun, serif`;
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                const expText = `×10${state.axis.xExponent < 0 ? '⁻' : ''}${Math.abs(state.axis.xExponent).toString().split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('')}`;
+                let expX, expY;
+                if (quadrant === '1234') {
+                    expX = plot.right - 20;
+                    expY = xAxisY + 50;
+                } else if (isXAxisAtBottom) {
+                    expX = plot.right;
+                    expY = plot.bottom + 30;
+                } else if (isXAxisAtTop) {
+                    expX = plot.right;
+                    expY = plot.top - 45;
+                } else {
+                    expX = plot.right;
+                    expY = xAxisY + 30;
+                }
+                ctx.fillText(expText, expX, expY);
+            }
+            
+            if (state.axis.yScientificNotation && state.axis.yExponent !== 0) {
+                ctx.font = `${state.axis.fontSize}px "Times New Roman", SimSun, serif`;
+                ctx.save();
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'bottom';
+                const expText = `×10${state.axis.yExponent < 0 ? '⁻' : ''}${Math.abs(state.axis.yExponent).toString().split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('')}`;
+                const yExpOffset = 33 + yDecimalPlaces * 6;
+                let expX, expY;
+                if (quadrant === '1234') {
+                    expX = yAxisX - yExpOffset - 20;
+                    expY = plot.top + 5;
+                } else if (isYAxisAtLeft) {
+                    expX = yAxisX - yExpOffset - 10;
+                    expY = plot.top - 5;
+                } else if (isYAxisAtRight) {
+                    expX = yAxisX + yExpOffset + 10;
+                    expY = plot.top - 5;
+                } else {
+                    expX = yAxisX - yExpOffset - 10;
+                    expY = plot.top - 5;
+                }
+                ctx.translate(expX, expY);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText(expText, 0, 0);
+                ctx.restore();
+            }
+            
+            if (state.selectedAxis) {
+                ctx.strokeStyle = '#3182ce';
+                ctx.lineWidth = 3;
+                
+                if (state.selectedAxis === 'x') {
+                    ctx.beginPath();
+                    ctx.moveTo(plot.left, xAxisY);
+                    ctx.lineTo(plot.right, xAxisY);
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(yAxisX, plot.top);
+                    ctx.lineTo(yAxisX, plot.bottom);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function drawCurves(plot) {
+            state.curves.forEach(curve => {
+                if (curve.points.length < 2) return;
+                
+                const points = curve.points
+                    .map(id => state.points.find(p => p.id === id))
+                    .filter(p => p)
+                    .sort((a, b) => a.x - b.x);
+                
+                if (points.length < 2) return;
+                
+                ctx.strokeStyle = curve.color;
+                ctx.lineWidth = curve.lineWidth;
+                
+                if (curve.lineStyle === 'dashed') {
+                    ctx.setLineDash([10, 5]);
+                } else {
+                    ctx.setLineDash([]);
+                }
+                
+                ctx.beginPath();
+                
+                if (curve.smooth) {
+                    const canvasPoints = points.map(p => dataToCanvas(p.x, p.y));
+                    drawSmoothCurve(canvasPoints);
+                } else {
+                    const first = dataToCanvas(points[0].x, points[0].y);
+                    ctx.moveTo(first.x, first.y);
+                    
+                    for (let i = 1; i < points.length; i++) {
+                        const pos = dataToCanvas(points[i].x, points[i].y);
+                        ctx.lineTo(pos.x, pos.y);
+                    }
+                }
+                
+                ctx.stroke();
+                ctx.setLineDash([]);
+            });
+        }
+
+        function drawSmoothCurve(points) {
+            if (points.length < 2) return;
+            
+            ctx.moveTo(points[0].x, points[0].y);
+            
+            for (let i = 0; i < points.length - 1; i++) {
+                const p0 = points[Math.max(0, i - 1)];
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                const p3 = points[Math.min(points.length - 1, i + 2)];
+                
+                const cp1x = p1.x + (p2.x - p0.x) / 6;
+                const cp1y = p1.y + (p2.y - p0.y) / 6;
+                const cp2x = p2.x - (p3.x - p1.x) / 6;
+                const cp2y = p2.y - (p3.y - p1.y) / 6;
+                
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+            }
+        }
+
+        function drawPoints(plot) {
+            state.points.forEach(point => {
+                const pos = dataToCanvas(point.x, point.y);
+                let style = state.styles.find(s => s.points.includes(point.id));
+                
+                if (!style) {
+                    style = {
+                        shape: 'filledCircle',
+                        size: 8,
+                        color: '#3182ce'
+                    };
+                }
+                
+                ctx.fillStyle = style.color;
+                ctx.strokeStyle = style.color;
+                ctx.lineWidth = 2;
+                
+                drawShape(pos.x, pos.y, style.shape, style.size);
+                
+                if (state.selectedPoint === point) {
+                    ctx.strokeStyle = '#e53e3e';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, style.size + 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function drawShape(x, y, shape, size) {
+            ctx.beginPath();
+            
+            switch (shape) {
+                case 'filledCircle':
+                    ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                case 'hollowCircle':
+                    ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+                case 'filledSquare':
+                    ctx.fillRect(x - size / 2, y - size / 2, size, size);
+                    break;
+                case 'hollowSquare':
+                    ctx.strokeRect(x - size / 2, y - size / 2, size, size);
+                    break;
+                case 'filledTriangle':
+                    ctx.moveTo(x, y - size / 2);
+                    ctx.lineTo(x - size / 2, y + size / 2);
+                    ctx.lineTo(x + size / 2, y + size / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    break;
+                case 'hollowTriangle':
+                    ctx.moveTo(x, y - size / 2);
+                    ctx.lineTo(x - size / 2, y + size / 2);
+                    ctx.lineTo(x + size / 2, y + size / 2);
+                    ctx.closePath();
+                    ctx.stroke();
+                    break;
+                case 'cross':
+                    const s = size / 2;
+                    ctx.moveTo(x - s, y - s);
+                    ctx.lineTo(x + s, y + s);
+                    ctx.moveTo(x + s, y - s);
+                    ctx.lineTo(x - s, y + s);
+                    ctx.stroke();
+                    break;
+            }
+        }
+
+        function drawAnnotations(plot) {
+            state.points.forEach(point => {
+                if (!point.showAnnotation) return;
+                
+                const pos = dataToCanvas(point.x, point.y);
+                const fontSize = point.annotationSize;
+                const xVal = point.x.toFixed(2);
+                const yVal = point.y.toFixed(2);
+                
+                ctx.font = `${fontSize}px "Times New Roman", SimSun, serif`;
+                
+                const xLabel = 'X ';
+                const yLabel = 'Y ';
+                const xLabelWidth = ctx.measureText(xLabel).width;
+                const yLabelWidth = ctx.measureText(yLabel).width;
+                
+                ctx.font = `bold ${fontSize}px "Times New Roman", SimSun, serif`;
+                const xValWidth = ctx.measureText(xVal).width;
+                const yValWidth = ctx.measureText(yVal).width;
+                
+                const line1Width = xLabelWidth + xValWidth;
+                const line2Width = yLabelWidth + yValWidth;
+                const maxWidth = Math.max(line1Width, line2Width);
+                
+                const padding = 6;
+                const lineH = fontSize + 2;
+                const boxW = maxWidth + padding * 2;
+                const boxH = lineH * 2 + padding * 2;
+                
+                const offsetX = 0;
+                const offsetY = 0;
+                const boxX = pos.x + offsetX;
+                const boxY = pos.y + offsetY - boxH;
+                
+                ctx.strokeStyle = '#718096';
+                ctx.lineWidth = 1;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.beginPath();
+                ctx.roundRect(boxX, boxY, boxW, boxH, 3);
+                ctx.fill();
+                ctx.stroke();
+                
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                
+                const textX = boxX + padding;
+                const line1Y = boxY + padding;
+                const line2Y = line1Y + lineH;
+                
+                ctx.font = `${fontSize}px "Times New Roman", SimSun, serif`;
+                ctx.fillStyle = '#2d3748';
+                ctx.fillText(xLabel, textX, line1Y);
+                
+                ctx.font = `bold ${fontSize}px "Times New Roman", SimSun, serif`;
+                ctx.fillStyle = '#3b82f6';
+                ctx.fillText(xVal, textX + xLabelWidth, line1Y);
+                
+                ctx.font = `${fontSize}px "Times New Roman", SimSun, serif`;
+                ctx.fillStyle = '#2d3748';
+                ctx.fillText(yLabel, textX, line2Y);
+                
+                ctx.font = `bold ${fontSize}px "Times New Roman", SimSun, serif`;
+                ctx.fillStyle = '#3b82f6';
+                ctx.fillText(yVal, textX + yLabelWidth, line2Y);
+            });
+        }
+
+        function drawTitle(plot) {
+            if (!state.title) return;
+            
+            ctx.font = `bold ${state.titleSize}px "Times New Roman", SimSun, serif`;
+            ctx.fillStyle = '#2d3748';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(state.title, plot.left + plot.width / 2, plot.top - 70);
+        }
+
+        function drawLegend(plot) {
+            const visibleCurves = state.curves.filter(c => c.showLegend && c.points.length > 0);
+            if (visibleCurves.length === 0) return;
+            
+            const legendX = plot.right - 100;
+            const legendY = plot.top + 20;
+            const lineHeight = state.legendSize + 10;
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            
+            const legendWidth = 90;
+            const legendHeight = visibleCurves.length * lineHeight + 10;
+            
+            ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
+            ctx.strokeRect(legendX, legendY, legendWidth, legendHeight);
+            
+            visibleCurves.forEach((curve, index) => {
+                const y = legendY + 15 + index * lineHeight;
+                
+                ctx.strokeStyle = curve.color;
+                ctx.lineWidth = curve.lineWidth;
+                
+                if (curve.lineStyle === 'dashed') {
+                    ctx.setLineDash([5, 3]);
+                } else {
+                    ctx.setLineDash([]);
+                }
+                
+                ctx.beginPath();
+                ctx.moveTo(legendX + 10, y);
+                ctx.lineTo(legendX + 35, y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                ctx.font = `${state.legendSize}px "Times New Roman", SimSun, serif`;
+                ctx.fillStyle = '#2d3748';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(curve.name, legendX + 40, y);
+            });
+        }
+
+        function saveAs(format) {
+            const fileName = state.title || 'figure';
+            const exportScale = 5;
+            
+            const exportCanvas = document.createElement('canvas');
+            const exportWidth = canvas.width * exportScale;
+            const exportHeight = canvas.height * exportScale;
+            exportCanvas.width = exportWidth;
+            exportCanvas.height = exportHeight;
+            
+            const exportCtx = exportCanvas.getContext('2d');
+            exportCtx.fillStyle = 'white';
+            exportCtx.fillRect(0, 0, exportWidth, exportHeight);
+            exportCtx.drawImage(canvas, 0, 0, exportWidth, exportHeight);
+            
+            if (format === 'png') {
+                exportCanvas.toBlob(function(b) {
+                    downloadBlob(b, `${fileName}.png`);
+                }, 'image/png', 1.0);
+            } else if (format === 'jpg') {
+                exportCanvas.toBlob(function(b) {
+                    downloadBlob(b, `${fileName}.jpg`);
+                }, 'image/jpeg', 0.95);
+            } else if (format === 'svg') {
+                const svgContent = generateSVG();
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                downloadBlob(blob, `${fileName}.svg`);
+            }
+        }
+        
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.style.display = 'none';
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            
+            setTimeout(function() {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+
+        function generateSVG() {
+            const plot = getPlotArea();
+            const width = canvasRect.width;
+            const height = canvasRect.height;
+            
+            let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+            svg += `<rect width="100%" height="100%" fill="white"/>`;
+            
+            if (state.axis.gridStyle !== 'none') {
+                const xStep = plot.width / state.axis.xCells;
+                const yStep = plot.height / state.axis.yCells;
+                const dashArray = state.axis.gridStyle === 'dashed' ? 'stroke-dasharray="5,5"' : '';
+                
+                svg += `<g stroke="${state.axis.gridColor}" stroke-width="0.5" ${dashArray}>`;
+                
+                for (let i = 1; i < state.axis.xCells; i++) {
+                    const x = plot.left + i * xStep;
+                    svg += `<line x1="${x}" y1="${plot.top}" x2="${x}" y2="${plot.bottom}"/>`;
+                }
+                
+                for (let i = 1; i < state.axis.yCells; i++) {
+                    const y = plot.top + i * yStep;
+                    svg += `<line x1="${plot.left}" y1="${y}" x2="${plot.right}" y2="${y}"/>`;
+                }
+                
+                svg += `</g>`;
+            }
+            
+            const quadrant = plot.quadrant;
+            const isXAxisAtBottom = quadrant === '1' || quadrant === '2' || quadrant === '12';
+            const isXAxisAtTop = quadrant === '3' || quadrant === '4';
+            const isXAxisAtOriginY = quadrant === '14' || quadrant === '1234';
+            const isYAxisAtLeft = quadrant === '1' || quadrant === '4' || quadrant === '14';
+            const isYAxisAtRight = quadrant === '2' || quadrant === '3';
+            const isYAxisAtOriginX = quadrant === '12' || quadrant === '1234';
+            
+            let xAxisY;
+            if (isXAxisAtBottom) xAxisY = plot.bottom;
+            else if (isXAxisAtTop) xAxisY = plot.top;
+            else xAxisY = plot.originY;
+            
+            let yAxisX;
+            if (isYAxisAtLeft) yAxisX = plot.left;
+            else if (isYAxisAtRight) yAxisX = plot.right;
+            else yAxisX = plot.originX;
+            
+            if (isXAxisAtBottom || isXAxisAtOriginY) {
+                svg += `<line x1="${plot.left}" y1="${xAxisY}" x2="${plot.right}" y2="${xAxisY}" stroke="#2d3748" stroke-width="1.5"/>`;
+            }
+            if (isXAxisAtTop) {
+                svg += `<line x1="${plot.left}" y1="${plot.top}" x2="${plot.right}" y2="${plot.top}" stroke="#2d3748" stroke-width="1.5"/>`;
+            }
+            if (isYAxisAtLeft || isYAxisAtOriginX) {
+                svg += `<line x1="${yAxisX}" y1="${plot.top}" x2="${yAxisX}" y2="${plot.bottom}" stroke="#2d3748" stroke-width="1.5"/>`;
+            }
+            if (isYAxisAtRight) {
+                svg += `<line x1="${plot.right}" y1="${plot.top}" x2="${plot.right}" y2="${plot.bottom}" stroke="#2d3748" stroke-width="1.5"/>`;
+            }
+            
+            const xStep = plot.width / state.axis.xCells;
+            const yStep = plot.height / state.axis.yCells;
+            const xValueStep = (state.axis.xMax - state.axis.xMin) / state.axis.xCells;
+            const yValueStep = (state.axis.yMax - state.axis.yMin) / state.axis.yCells;
+            const xDecimalPlaces = state.axis.xDecimalPlaces;
+            const yDecimalPlaces = state.axis.yDecimalPlaces;
+            
+            svg += `<g font-size="${state.axis.fontSize}" font-family="Times New Roman, SimSun" fill="#2d3748">`;
+            
+            if (isXAxisAtBottom || isXAxisAtOriginY) {
+                const halfX = state.axis.xCells / 2;
+                for (let i = 0; i <= state.axis.xCells; i++) {
+                    const x = plot.left + i * xStep;
+                    let value;
+                    if (quadrant === '12' || quadrant === '1234') {
+                        value = (i - halfX) * xValueStep;
+                    } else if (quadrant === '2') {
+                        value = (i - state.axis.xCells) * xValueStep;
+                    } else {
+                        value = i * xValueStep;
+                    }
+                    if (quadrant === '1234' || quadrant === '14') {
+                        if (Math.abs(x - plot.originX) < 1) continue;
+                    }
+                    svg += `<line x1="${x}" y1="${xAxisY}" x2="${x}" y2="${xAxisY + 5}" stroke="#2d3748"/>`;
+                    svg += `<text x="${x}" y="${xAxisY + 20}" text-anchor="middle">${value.toFixed(xDecimalPlaces)}</text>`;
+                }
+            }
+            
+            if (isXAxisAtTop) {
+                for (let i = 0; i <= state.axis.xCells; i++) {
+                    const x = plot.left + i * xStep;
+                    let value;
+                    if (quadrant === '3') {
+                        value = (i - state.axis.xCells) * xValueStep;
+                    } else {
+                        value = i * xValueStep;
+                    }
+                    svg += `<line x1="${x}" y1="${plot.top}" x2="${x}" y2="${plot.top - 5}" stroke="#2d3748"/>`;
+                    svg += `<text x="${x}" y="${plot.top - 10}" text-anchor="middle">${value.toFixed(xDecimalPlaces)}</text>`;
+                }
+            }
+            
+            if (isYAxisAtLeft || isYAxisAtOriginX) {
+                const halfY = state.axis.yCells / 2;
+                for (let i = 0; i <= state.axis.yCells; i++) {
+                    const y = plot.bottom - i * yStep;
+                    let value;
+                    if (quadrant === '14' || quadrant === '1234') {
+                        value = (i - halfY) * yValueStep;
+                    } else if (quadrant === '4') {
+                        value = (i - state.axis.yCells) * yValueStep;
+                    } else {
+                        value = i * yValueStep;
+                    }
+                    if (quadrant === '1234' || quadrant === '12') {
+                        if (Math.abs(y - plot.originY) < 1) continue;
+                    }
+                    svg += `<line x1="${yAxisX - 5}" y1="${y}" x2="${yAxisX}" y2="${y}" stroke="#2d3748"/>`;
+                    svg += `<text x="${yAxisX - 10}" y="${y + 4}" text-anchor="end">${value.toFixed(yDecimalPlaces)}</text>`;
+                }
+            }
+            
+            if (isYAxisAtRight) {
+                for (let i = 0; i <= state.axis.yCells; i++) {
+                    const y = plot.bottom - i * yStep;
+                    let value;
+                    if (quadrant === '3') {
+                        value = (i - state.axis.yCells) * yValueStep;
+                    } else {
+                        value = i * yValueStep;
+                    }
+                    svg += `<line x1="${plot.right}" y1="${y}" x2="${plot.right + 5}" y2="${y}" stroke="#2d3748"/>`;
+                    svg += `<text x="${plot.right + 10}" y="${y + 4}" text-anchor="start">${value.toFixed(yDecimalPlaces)}</text>`;
+                }
+            }
+            
+            svg += `</g>`;
+            
+            let xLabelX, xLabelY;
+            if (quadrant === '1234') {
+                xLabelX = plot.right - 20;
+                xLabelY = xAxisY + 30;
+            } else if (isXAxisAtBottom) {
+                xLabelX = plot.left + plot.width / 2;
+                xLabelY = plot.bottom + 32;
+            } else if (isXAxisAtTop) {
+                xLabelX = plot.left + plot.width / 2;
+                xLabelY = plot.top - 37;
+            } else {
+                xLabelX = plot.left + plot.width / 2;
+                xLabelY = xAxisY + 32;
+            }
+            svg += `<text x="${xLabelX}" y="${xLabelY}" font-size="${state.axis.fontSize + 2}" font-weight="bold" text-anchor="${quadrant === '1234' ? 'end' : 'middle'}" font-family="Times New Roman, SimSun" fill="#2d3748">${state.axis.xName}</text>`;
+            
+            const yLabelOffset = 33 + yDecimalPlaces * 6;
+            let yLabelX, yLabelY;
+            if (quadrant === '1234') {
+                yLabelX = yAxisX - yLabelOffset;
+                yLabelY = plot.top + 20;
+            } else if (isYAxisAtOriginX) {
+                yLabelX = yAxisX - yLabelOffset;
+                yLabelY = plot.top + plot.height / 2;
+            } else if (isYAxisAtLeft) {
+                yLabelX = yAxisX - yLabelOffset;
+                yLabelY = plot.top + plot.height / 2;
+            } else {
+                yLabelX = yAxisX + yLabelOffset;
+                yLabelY = plot.top + plot.height / 2;
+            }
+            svg += `<text x="${yLabelX}" y="${yLabelY}" font-size="${state.axis.fontSize + 2}" font-weight="bold" text-anchor="middle" font-family="Times New Roman, SimSun" fill="#2d3748" transform="rotate(-90, ${yLabelX}, ${yLabelY})">${state.axis.yName}</text>`;
+
+            if (state.axis.xScientificNotation && state.axis.xExponent !== 0) {
+                const expText = `×10${state.axis.xExponent < 0 ? '⁻' : ''}${Math.abs(state.axis.xExponent).toString().split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('')}`;
+                let expX, expY;
+                if (quadrant === '1234') {
+                    expX = plot.right - 20;
+                    expY = xAxisY + 50;
+                } else if (isXAxisAtBottom) {
+                    expX = plot.right;
+                    expY = plot.bottom + 30;
+                } else if (isXAxisAtTop) {
+                    expX = plot.right;
+                    expY = plot.top - 45;
+                } else {
+                    expX = plot.right;
+                    expY = xAxisY + 30;
+                }
+                svg += `<text x="${expX}" y="${expY}" font-size="${state.axis.fontSize}" text-anchor="end" font-family="Times New Roman, SimSun" fill="#2d3748">${expText}</text>`;
+            }
+
+            if (state.axis.yScientificNotation && state.axis.yExponent !== 0) {
+                const yExpText = `×10${state.axis.yExponent < 0 ? '⁻' : ''}${Math.abs(state.axis.yExponent).toString().split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('')}`;
+                const yExpOffset = 33 + yDecimalPlaces * 6;
+                let expX, expY;
+                if (quadrant === '1234') {
+                    expX = yAxisX - yExpOffset - 20;
+                    expY = plot.top + 5;
+                } else if (isYAxisAtLeft) {
+                    expX = yAxisX - yExpOffset - 10;
+                    expY = plot.top - 5;
+                } else if (isYAxisAtRight) {
+                    expX = yAxisX + yExpOffset + 10;
+                    expY = plot.top - 5;
+                } else {
+                    expX = yAxisX - yExpOffset - 10;
+                    expY = plot.top - 5;
+                }
+                svg += `<text x="${expX}" y="${expY}" font-size="${state.axis.fontSize}" text-anchor="end" font-family="Times New Roman, SimSun" fill="#2d3748" transform="rotate(-90, ${expX}, ${expY})">${yExpText}</text>`;
+            }
+
+            state.curves.forEach(curve => {
+                if (curve.points.length < 2) return;
+                
+                const points = curve.points
+                    .map(id => state.points.find(p => p.id === id))
+                    .filter(p => p)
+                    .sort((a, b) => a.x - b.x);
+                
+                if (points.length < 2) return;
+                
+                const dashArray = curve.lineStyle === 'dashed' ? 'stroke-dasharray="10,5"' : '';
+                let pathData = '';
+                
+                const first = dataToCanvasSVG(points[0], plot);
+                pathData = `M ${first.x} ${first.y}`;
+                
+                for (let i = 1; i < points.length; i++) {
+                    const pos = dataToCanvasSVG(points[i], plot);
+                    pathData += ` L ${pos.x} ${pos.y}`;
+                }
+                
+                svg += `<path d="${pathData}" stroke="${curve.color}" stroke-width="${curve.lineWidth}" fill="none" ${dashArray}/>`;
+            });
+            
+            state.points.forEach(point => {
+                const pos = dataToCanvasSVG(point, plot);
+                let style = state.styles.find(s => s.points.includes(point.id));
+                
+                if (!style) {
+                    style = { shape: 'filledCircle', size: 8, color: '#3182ce' };
+                }
+                
+                svg += generateSVGShape(pos.x, pos.y, style.shape, style.size, style.color);
+                
+                if (point.showAnnotation) {
+                    const xVal = point.x.toFixed(2);
+                    const yVal = point.y.toFixed(2);
+                    const fs = point.annotationSize;
+                    const lineH = fs + 2;
+                    const pad = 6;
+                    const estW = fs * 5;
+                    const boxW = estW + pad * 2;
+                    const boxH = lineH * 2 + pad * 2;
+                    const boxX = pos.x;
+                    const boxY = pos.y - boxH;
+                    
+                    svg += `<rect x="${boxX}" y="${boxY}" width="${boxW}" height="${boxH}" fill="rgba(255,255,255,0.95)" stroke="#718096" stroke-width="1" rx="3" ry="3"/>`;
+                    svg += `<text x="${boxX + pad}" y="${boxY + pad + fs}" font-size="${fs}" font-family="Times New Roman, SimSun" fill="#2d3748">X <tspan font-weight="bold" fill="#3b82f6">${xVal}</tspan></text>`;
+                    svg += `<text x="${boxX + pad}" y="${boxY + pad + fs + lineH}" font-size="${fs}" font-family="Times New Roman, SimSun" fill="#2d3748">Y <tspan font-weight="bold" fill="#3b82f6">${yVal}</tspan></text>`;
+                }
+            });
+            
+            if (state.title) {
+                svg += `<text x="${plot.left + plot.width / 2}" y="${plot.top - 70}" font-size="${state.titleSize}" font-weight="bold" text-anchor="middle" font-family="Times New Roman, SimSun" fill="#2d3748">${state.title}</text>`;
+            }
+            
+            const visibleCurves = state.curves.filter(c => c.showLegend && c.points.length > 0);
+            if (visibleCurves.length > 0) {
+                const legendX = plot.right - 100;
+                const legendY = plot.top + 20;
+                const lineHeight = state.legendSize + 10;
+                
+                svg += `<rect x="${legendX}" y="${legendY}" width="90" height="${visibleCurves.length * lineHeight + 10}" fill="rgba(255,255,255,0.95)" stroke="#e2e8f0"/>`;
+                
+                visibleCurves.forEach((curve, index) => {
+                    const y = legendY + 15 + index * lineHeight;
+                    const dashArray = curve.lineStyle === 'dashed' ? 'stroke-dasharray="5,3"' : '';
+                    svg += `<line x1="${legendX + 10}" y1="${y}" x2="${legendX + 35}" y2="${y}" stroke="${curve.color}" stroke-width="${curve.lineWidth}" ${dashArray}/>`;
+                    svg += `<text x="${legendX + 40}" y="${y + 4}" font-size="${state.legendSize}" font-family="Times New Roman, SimSun" fill="#2d3748">${curve.name}</text>`;
+                });
+            }
+            
+            svg += `</svg>`;
+            return svg;
+        }
+        
+        function dataToCanvasSVG(point, plot) {
+            const xRange = state.axis.xMax - state.axis.xMin;
+            const yRange = state.axis.yMax - state.axis.yMin;
+            
+            return {
+                x: plot.left + ((point.x - state.axis.xMin) / xRange) * plot.width,
+                y: plot.bottom - ((point.y - state.axis.yMin) / yRange) * plot.height
+            };
+        }
+        
+        function generateSVGShape(x, y, shape, size, color) {
+            switch (shape) {
+                case 'filledCircle':
+                    return `<circle cx="${x}" cy="${y}" r="${size/2}" fill="${color}"/>`;
+                case 'hollowCircle':
+                    return `<circle cx="${x}" cy="${y}" r="${size/2}" fill="none" stroke="${color}" stroke-width="2"/>`;
+                case 'filledSquare':
+                    return `<rect x="${x - size/2}" y="${y - size/2}" width="${size}" height="${size}" fill="${color}"/>`;
+                case 'hollowSquare':
+                    return `<rect x="${x - size/2}" y="${y - size/2}" width="${size}" height="${size}" fill="none" stroke="${color}" stroke-width="2"/>`;
+                case 'filledTriangle':
+                    return `<polygon points="${x},${y - size/2} ${x - size/2},${y + size/2} ${x + size/2},${y + size/2}" fill="${color}"/>`;
+                case 'hollowTriangle':
+                    return `<polygon points="${x},${y - size/2} ${x - size/2},${y + size/2} ${x + size/2},${y + size/2}" fill="none" stroke="${color}" stroke-width="2"/>`;
+                case 'cross':
+                    return `<g stroke="${color}" stroke-width="2"><line x1="${x - size/2}" y1="${y - size/2}" x2="${x + size/2}" y2="${y + size/2}"/><line x1="${x + size/2}" y1="${y - size/2}" x2="${x - size/2}" y2="${y + size/2}"/></g>`;
+                default:
+                    return `<circle cx="${x}" cy="${y}" r="${size/2}" fill="${color}"/>`;
+            }
+        }
+
+        function showHelpModal() {
+            document.getElementById('helpModal').classList.add('active');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.remove('active');
+        }
+
+        function showChangelogModal() {
+            document.getElementById('changelogModal').classList.add('active');
+        }
+
+        function closeChangelogModal() {
+            document.getElementById('changelogModal').classList.remove('active');
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeHelpModal();
+                closeChangelogModal();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const helpModal = document.getElementById('helpModal');
+            const changelogModal = document.getElementById('changelogModal');
+            if (e.target === helpModal) {
+                closeHelpModal();
+            }
+            if (e.target === changelogModal) {
+                closeChangelogModal();
+            }
+        });
+
+        window.onload = init;
+    </script>
+</body>
+</html>
