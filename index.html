@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand-Craft-Plot - v 2.0.1</title>
+    <title>Hand-Craft-Plot - v 2.1.0</title>
     <style>
         * {
             margin: 0;
@@ -305,6 +305,8 @@
             background: #f7fafc;
             border-radius: 4px;
             border: 1px solid #e2e8f0;
+            position: relative;
+            user-select: none;
         }
 
         .checkbox-item {
@@ -317,7 +319,7 @@
             font-size: 12px;
             cursor: pointer;
             border: 1px solid #e2e8f0;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
         }
 
         .checkbox-item:hover {
@@ -325,8 +327,16 @@
             background: #ebf8ff;
         }
 
+        .checkbox-item.drag-over {
+            border-color: #3182ce;
+            background: #bee3f8;
+            box-shadow: 0 0 4px rgba(49,130,206,0.5);
+            transform: scale(1.05);
+        }
+
         .checkbox-item input {
             cursor: pointer;
+            pointer-events: none;
         }
 
         .color-picker-wrapper {
@@ -933,7 +943,7 @@
 
                 <div class="developer-info">
                     <p><strong>开发者：FANGZx</strong></p>
-                    <p class="version">Hand-Craft-Plot - v 2.0.1</p>
+                    <p class="version">Hand-Craft-Plot - v 2.1.0</p>
                 </div>
             </div>
         </div>
@@ -946,6 +956,16 @@
                 <button class="modal-close" onclick="closeChangelogModal()">&times;</button>
             </div>
             <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                <div class="changelog-entry">
+                    <h4>v 2.1.0 - 交互增强</h4>
+                    <p class="changelog-date">2026-04-10</p>
+                    <ul>
+                        <li>新增按住鼠标拖动快速勾选/取消数据点功能</li>
+                        <li>曲线和数据点样式均支持拖拽勾选</li>
+                        <li>拖拽时显示grabbing光标反馈</li>
+                        <li>添加操作提示文字</li>
+                    </ul>
+                </div>
                 <div class="changelog-entry">
                     <h4>v 2.0.1 - Bug修复</h4>
                     <p class="changelog-date">2026-04-09</p>
@@ -1085,7 +1105,7 @@
                 </div>
             </div>
             <div class="menu-panel">
-                <div class="menu-title">Hand-Craft-Plot<br><span style="font-size: 14px;">v 2.0.1</span></div>
+                <div class="menu-title">Hand-Craft-Plot<br><span style="font-size: 14px;">v 2.1.0</span></div>
                 
                 <!-- 初始菜单 -->
                 <div id="mainMenu">
@@ -2073,6 +2093,7 @@
                             <label>选择数据点</label>
                             <button class="btn btn-secondary" style="margin-bottom: 8px; padding: 4px 12px; font-size: 12px;" 
                                 onclick="toggleSelectAllCurvePoints(${index})">${state.points.length > 0 && state.points.every(p => curve.points.includes(p.id)) ? '取消全选' : '全选所有点'}</button>
+                            <div style="font-size: 11px; color: #999; margin-bottom: 4px;">按住鼠标拖动可快速勾选/取消</div>
                             <div class="checkbox-group" id="curvePoints${index}">
                                 ${renderPointCheckboxes(curve.points, index)}
                             </div>
@@ -2125,6 +2146,7 @@
                 if (checkboxGroup && scrollPositions[index] !== undefined) {
                     checkboxGroup.scrollTop = scrollPositions[index];
                 }
+                initDragSelect(`curvePoints${index}`, 'curve', index);
             });
             
             document.getElementById('addCurveBtn').style.display = 
@@ -2133,7 +2155,7 @@
 
         function renderPointCheckboxes(selectedPoints, curveIndex) {
             return state.points.map(p => `
-                <label class="checkbox-item">
+                <label class="checkbox-item" data-point-id="${p.id}">
                     <input type="checkbox" ${selectedPoints.includes(p.id) ? 'checked' : ''} 
                         onchange="toggleCurvePoint(${curveIndex}, ${p.id}, this.checked)">
                     P${p.id}
@@ -2144,6 +2166,9 @@
         function toggleCurveBody(index) {
             const body = document.getElementById(`curveBody${index}`);
             body.classList.toggle('active');
+            if (body.classList.contains('active')) {
+                setTimeout(() => initDragSelect(`curvePoints${index}`, 'curve', index), 0);
+            }
         }
 
         function updateCurveName(index, name) {
@@ -2210,6 +2235,126 @@
             render();
         }
 
+        let dragState = null;
+
+        function initDragSelect(groupId, type, styleOrCurveIndex) {
+            const group = document.getElementById(groupId);
+            if (!group) return;
+            if (group.dataset.dragInit === 'true') return;
+            group.dataset.dragInit = 'true';
+            group.dataset.dragType = type;
+            group.dataset.dragIndex = styleOrCurveIndex;
+
+            group.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return;
+                const item = e.target.closest('.checkbox-item');
+                if (!item) return;
+                
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (!checkbox) return;
+
+                const pointId = parseInt(item.dataset.pointId);
+                const action = checkbox.checked ? 'uncheck' : 'check';
+                
+                dragState = {
+                    group: group,
+                    type: type,
+                    index: styleOrCurveIndex,
+                    action: action,
+                    touched: new Set([pointId])
+                };
+                
+                group.style.cursor = 'grabbing';
+                checkbox.checked = action === 'check';
+                item.classList.add('drag-over');
+                
+                if (type === 'curve') {
+                    updateCurvePointsDirect(styleOrCurveIndex, pointId, action === 'check');
+                } else {
+                    updateStylePointsDirect(styleOrCurveIndex, pointId, action === 'check');
+                }
+
+                e.preventDefault();
+            });
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (!dragState) return;
+
+            const items = dragState.group.querySelectorAll('.checkbox-item');
+            items.forEach(item => {
+                const itemRect = item.getBoundingClientRect();
+                const underMouse = e.clientX >= itemRect.left && 
+                                   e.clientX <= itemRect.right &&
+                                   e.clientY >= itemRect.top && 
+                                   e.clientY <= itemRect.bottom;
+
+                if (underMouse) {
+                    const pointId = parseInt(item.dataset.pointId);
+                    if (!dragState.touched.has(pointId)) {
+                        dragState.touched.add(pointId);
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        checkbox.checked = dragState.action === 'check';
+                        item.classList.add('drag-over');
+                        if (dragState.type === 'curve') {
+                            updateCurvePointsDirect(dragState.index, pointId, dragState.action === 'check');
+                        } else {
+                            updateStylePointsDirect(dragState.index, pointId, dragState.action === 'check');
+                        }
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!dragState) return;
+            
+            dragState.group.style.cursor = '';
+            const items = dragState.group.querySelectorAll('.checkbox-item.drag-over');
+            items.forEach(item => item.classList.remove('drag-over'));
+            
+            if (dragState.type === 'curve') {
+                renderCurveList();
+            } else {
+                renderStyleList();
+            }
+            render();
+            
+            dragState = null;
+        });
+
+        function updateCurvePointsDirect(curveIndex, pointId, add) {
+            const curve = state.curves[curveIndex];
+            if (!curve) return;
+            if (add) {
+                if (!curve.points.includes(pointId)) {
+                    curve.points.push(pointId);
+                }
+            } else {
+                const idx = curve.points.indexOf(pointId);
+                if (idx > -1) {
+                    curve.points.splice(idx, 1);
+                }
+            }
+            render();
+        }
+
+        function updateStylePointsDirect(styleIndex, pointId, add) {
+            const style = state.styles[styleIndex];
+            if (!style) return;
+            if (add) {
+                if (!style.points.includes(pointId)) {
+                    style.points.push(pointId);
+                }
+            } else {
+                const idx = style.points.indexOf(pointId);
+                if (idx > -1) {
+                    style.points.splice(idx, 1);
+                }
+            }
+            render();
+        }
+
         function deleteCurve(index) {
             state.curves.splice(index, 1);
             renderCurveList();
@@ -2272,6 +2417,7 @@
                             <label>选择数据点</label>
                             <button class="btn btn-secondary" style="margin-bottom: 8px; padding: 4px 12px; font-size: 12px;" 
                                 onclick="toggleSelectAllStylePoints(${index})">${state.points.length > 0 && state.points.every(p => style.points.includes(p.id)) ? '取消全选' : '全选所有点'}</button>
+                            <div style="font-size: 11px; color: #999; margin-bottom: 4px;">按住鼠标拖动可快速勾选/取消</div>
                             <div class="checkbox-group" id="stylePoints${index}">
                                 ${renderStylePointCheckboxes(style.points)}
                             </div>
@@ -2305,12 +2451,13 @@
                 if (checkboxGroup && scrollPositions[index] !== undefined) {
                     checkboxGroup.scrollTop = scrollPositions[index];
                 }
+                initDragSelect(`stylePoints${index}`, 'style', index);
             });
         }
 
         function renderStylePointCheckboxes(selectedPoints) {
             return state.points.map(p => `
-                <label class="checkbox-item">
+                <label class="checkbox-item" data-point-id="${p.id}">
                     <input type="checkbox" ${selectedPoints.includes(p.id) ? 'checked' : ''} 
                         onchange="toggleStylePoint(${p.id}, this.checked)">
                     P${p.id}
@@ -2321,6 +2468,9 @@
         function toggleStyleBody(index) {
             const body = document.getElementById(`styleBody${index}`);
             body.classList.toggle('active');
+            if (body.classList.contains('active')) {
+                setTimeout(() => initDragSelect(`stylePoints${index}`, 'style', index), 0);
+            }
         }
 
         function updateStyleShape(index, shape) {
@@ -2366,6 +2516,7 @@
                     }
                 }
             });
+            renderStyleList();
             render();
         }
 

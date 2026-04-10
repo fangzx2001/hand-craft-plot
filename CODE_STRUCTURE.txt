@@ -1,7 +1,7 @@
 ================================================================================
                 Hand-Craft-Plot - 代码结构文档
                       开发者: FANGZx
-                      版本: v 2.0.1
+                      版本: v 2.1.0
 ================================================================================
 
 【项目概述】
@@ -193,109 +193,114 @@ style = {
 ================================================================================
 
 【初始化函数】
-- init()                     (L1420) - 页面初始化
-- updateQuadrantMode()        (L1454) - 更新象限模式
-- initMenuStates()           (L1459) - 初始化菜单折叠状态
-- resizeCanvas()             (L1471) - 调整画布大小
+- init()                     (L1449) - 页面初始化
+- updateQuadrantMode()        (L1483) - 更新象限模式
+- initMenuStates()           (L1488) - 初始化菜单折叠状态
+- resizeCanvas()             (L1500) - 调整画布大小
 
 【坐标转换函数】
-- getPlotArea()              (L1486) - 获取绘图区域（含90%缩放和原点计算）
-- dataToCanvas(x, y)         (L1552) - 数据坐标→画布坐标（考虑科学计数法和象限）
-- canvasToData(canvasX, canvasY) (L1599) - 画布坐标→数据坐标
-- isPointInPlotArea(x, y)    (L1645) - 检查点是否在绘图区域内
-- isPointOnAxis(x, y)        (L1650) - 检查点是否在坐标轴上
-- findPointAtPosition(x, y)  (L1682) - 根据坐标查找数据点
-- screenToCanvas(screenX, screenY) (L1695) - 屏幕坐标→画布坐标（考虑缩放平移）
-- dataToCanvasSVG(point, plot)(L3306) - SVG导用的坐标转换
+- getPlotArea()              (L1515) - 获取绘图区域（含90%缩放和原点计算）
+- dataToCanvas(x, y)         (L1581) - 数据坐标→画布坐标（考虑科学计数法和象限）
+- canvasToData(canvasX, canvasY) (L1628) - 画布坐标→数据坐标
+- isPointInPlotArea(x, y)    (L1674) - 检查点是否在绘图区域内
+- isPointOnAxis(x, y)        (L1679) - 检查点是否在坐标轴上
+- findPointAtPosition(x, y)  (L1711) - 根据坐标查找数据点
+- screenToCanvas(screenX, screenY) (L1724) - 屏幕坐标→画布坐标（考虑缩放平移）
+- dataToCanvasSVG(point, plot)(L3466) - SVG导用的坐标转换
 
 【鼠标事件处理】
-- handleWheel(e)             (L1702) - 滚轮缩放（受isLocked影响）
-- handleMouseDown(e)         (L1719) - 鼠标按下（选择点/开始拖拽）
-- handleMouseMove(e)         (L1756) - 鼠标移动（平移画布）
-- handleMouseUp(e)           (L1769) - 鼠标松开
-- handleDoubleClick(e)       (L1796) - 双击添加数据点
-- handleRightClick(e)        (L1810) - 右键菜单
+- handleWheel(e)             (L1731) - 滚轮缩放（受isLocked影响）
+- handleMouseDown(e)         (L1748) - 鼠标按下（选择点/开始拖拽）
+- handleMouseMove(e)         (L1785) - 鼠标移动（平移画布）
+- handleMouseUp(e)           (L1798) - 鼠标松开
+- handleDoubleClick(e)       (L1825) - 双击添加数据点
+- handleRightClick(e)        (L1839) - 右键菜单
 
 【画布控制】
-- toggleLock()               (L1773) - 切换锁定状态
-- resetCanvas()              (L1789) - 重置画布（缩放100%，偏移归零）
+- toggleLock()               (L1802) - 切换锁定状态
+- resetCanvas()              (L1818) - 重置画布（缩放100%，偏移归零）
 
 【数据点管理】
-- addPoint(x, y)             (L1822) - 添加数据点
-- deletePoint(point)         (L1842) - 删除数据点
-- updatePointCount()         (L1860) - 更新数据点计数
-- showAxisMenu()             (L1864) - 显示坐标轴设置菜单
-- showPointMenu(point)       (L1881) - 显示数据点设置菜单
-- updatePointData()          (L1952) - 更新数据点坐标
-- toggleAnnotation()         (L1960) - 切换标注显示
-- updateAnnotation()         (L1973) - 更新标注设置
-- deleteSelectedPoint()      (L1980) - 删除选中的数据点
+- addPoint(x, y)             (L1851) - 添加数据点
+- deletePoint(point)         (L1871) - 删除数据点
+- updatePointCount()         (L1889) - 更新数据点计数
+- showAxisMenu()             (L1893) - 显示坐标轴设置菜单
+- showPointMenu(point)       (L1910) - 显示数据点设置菜单
+- updatePointData()          (L1981) - 更新数据点坐标
+- toggleAnnotation()         (L1989) - 切换标注显示
+- updateAnnotation()         (L2002) - 更新标注设置
+- deleteSelectedPoint()      (L2009) - 删除选中的数据点
 
 【UI控制函数】
-- backToMainMenu()           (L1899) - 返回主菜单
-- toggleMenu(menuId)         (L1986) - 切换菜单
-- toggleSubmenu(sectionId)   (L1999) - 切换子菜单
+- backToMainMenu()           (L1928) - 返回主菜单
+- toggleMenu(menuId)         (L2015) - 切换菜单
+- toggleSubmenu(sectionId)   (L2028) - 切换子菜单
 
 【坐标轴设置】
-- updateAxisRange()          (L1909) - 更新坐标轴范围
-- updateAxisNames()          (L1946) - 更新坐标轴名称
-- updateGridStyle()          (L2369) - 更新网格样式
+- updateAxisRange()          (L1938) - 更新坐标轴范围
+- updateAxisNames()          (L1975) - 更新坐标轴名称
+- updateGridStyle()          (L2529) - 更新网格样式
 
 【曲线管理】
-- addCurve()                 (L2012) - 添加曲线
-- renderCurveList()          (L2032) - 渲染曲线列表
-- renderPointCheckboxes()    (L2125) - 渲染点复选框列表
-- toggleCurveBody(index)     (L2135) - 折叠/展开曲线设置
-- updateCurveName(index)     (L2140) - 更新曲线名称
-- updateCurveWidth(index)    (L2145) - 更新线条粗细
-- updateCurveColor(index)    (L2150) - 更新线条颜色
-- updateCurveLineStyle(index)(L2156) - 更新线条样式
-- updateCurveSmooth(index)   (L2162) - 更新平滑设置
-- updateCurveLegend(index)   (L2168) - 更新图例显示
-- toggleSelectAllCurvePoints(index) (L2173) - 全选/取消全选曲线点
-- toggleCurvePoint(id, checked)(L2187) - 切换单个曲线点
-- deleteCurve(index)         (L2204) - 删除曲线
+- addCurve()                 (L2041) - 添加曲线
+- renderCurveList()          (L2061) - 渲染曲线列表
+- renderPointCheckboxes()    (L2156) - 渲染点复选框列表
+- toggleCurveBody(index)     (L2166) - 折叠/展开曲线设置
+- updateCurveName(index)     (L2174) - 更新曲线名称
+- updateCurveWidth(index)    (L2179) - 更新线条粗细
+- updateCurveColor(index)    (L2184) - 更新线条颜色
+- updateCurveLineStyle(index)(L2190) - 更新线条样式
+- updateCurveSmooth(index)   (L2196) - 更新平滑设置
+- updateCurveLegend(index)   (L2202) - 更新图例显示
+- toggleSelectAllCurvePoints(index) (L2207) - 全选/取消全选曲线点
+- toggleCurvePoint(id, checked)(L2221) - 切换单个曲线点
+- deleteCurve(index)         (L2358) - 删除曲线
+
+【拖拽勾选】
+- initDragSelect(groupId, type, index) (L2240) - 初始化拖拽多选
+- updateCurvePointsDirect()  (L2326) - 直接更新曲线点（不重建DOM）
+- updateStylePointsDirect()  (L2342) - 直接更新样式点（不重建DOM）
 
 【样式管理】
-- addStyle()                 (L2210) - 添加样式
-- renderStyleList()          (L2226) - 渲染样式列表
-- renderStylePointCheckboxes()(L2302) - 渲染样式点复选框
-- toggleStyleBody(index)     (L2312) - 折叠/展开样式设置
-- updateStyleShape(index)    (L2317) - 更新形状
-- updateStyleSize(index)     (L2322) - 更新大小
-- updateStyleColor(index)    (L2327) - 更新颜色
-- toggleSelectAllStylePoints(index) (L2333) - 全选/取消全选样式点
-- toggleStylePoint(id, checked)(L2347) - 切换单个样式点
-- deleteStyle(index)         (L2363) - 删除样式
+- addStyle()                 (L2364) - 添加样式
+- renderStyleList()          (L2380) - 渲染样式列表
+- renderStylePointCheckboxes()(L2458) - 渲染样式点复选框
+- toggleStyleBody(index)     (L2468) - 折叠/展开样式设置
+- updateStyleShape(index)    (L2476) - 更新形状
+- updateStyleSize(index)     (L2481) - 更新大小
+- updateStyleColor(index)    (L2486) - 更新颜色
+- toggleSelectAllStylePoints(index) (L2492) - 全选/取消全选样式点
+- toggleStylePoint(id, checked)(L2506) - 切换单个样式点
+- deleteStyle(index)         (L2523) - 删除样式
 
 【其他设置】
-- updateTitle()              (L2376) - 更新标题
-- updateLegendSize()         (L2382) - 更新图例字号
-- formatText(text)          (L2387) - 格式化文本
+- updateTitle()              (L2536) - 更新标题
+- updateLegendSize()         (L2542) - 更新图例字号
+- formatText(text)          (L2547) - 格式化文本
 
 【渲染函数】（核心绘图逻辑）
-- render()                   (L2393) - 主渲染函数
-- drawGrid(plot)            (L2416) - 绘制网格
-- drawAxes(plot)            (L2446) - 绘制坐标轴（多象限自适应）
-- drawCurves(plot)          (L2722) - 绘制曲线
-- drawSmoothCurve(points)   (L2762) - 绘制平滑曲线
-- drawPoints(plot)          (L2782) - 绘制数据点
-- drawShape(x, y, shape, size)(L2811) - 绘制数据点形状
-- drawAnnotations(plot)      (L2854) - 绘制数据标注（MATLAB风格方形气泡）
-- drawTitle(plot)           (L2921) - 绘制标题
-- drawLegend(plot)          (L2931) - 绘制图例
+- render()                   (L2553) - 主渲染函数
+- drawGrid(plot)            (L2576) - 绘制网格
+- drawAxes(plot)            (L2606) - 绘制坐标轴（多象限自适应）
+- drawCurves(plot)          (L2882) - 绘制曲线
+- drawSmoothCurve(points)   (L2922) - 绘制平滑曲线
+- drawPoints(plot)          (L2942) - 绘制数据点
+- drawShape(x, y, shape, size)(L2971) - 绘制数据点形状
+- drawAnnotations(plot)      (L3014) - 绘制数据标注（MATLAB风格方形气泡）
+- drawTitle(plot)           (L3081) - 绘制标题
+- drawLegend(plot)          (L3091) - 绘制图例
 
 【导出函数】
-- saveAs(format)            (L2975) - 导出为PNG/JPG/SVG（5倍分辨率）
-- downloadBlob(blob, filename)(L3005) - 下载Blob文件
-- generateSVG()             (L3020) - 生成SVG完整内容（含科学计数法）
-- generateSVGShape(x, y, shape, size, color) (L3316) - SVG形状生成
+- saveAs(format)            (L3135) - 导出为PNG/JPG/SVG（5倍分辨率）
+- downloadBlob(blob, filename)(L3165) - 下载Blob文件
+- generateSVG()             (L3180) - 生成SVG完整内容（含科学计数法）
+- generateSVGShape(x, y, shape, size, color) (L3476) - SVG形状生成
 
 【弹窗函数】
-- showHelpModal()            (L3337) - 显示使用说明
-- closeHelpModal()           (L3341) - 关闭使用说明
-- showChangelogModal()       (L3345) - 显示更新日志
-- closeChangelogModal()      (L3349) - 关闭更新日志
+- showHelpModal()            (L3497) - 显示使用说明
+- closeHelpModal()           (L3501) - 关闭使用说明
+- showChangelogModal()       (L3505) - 显示更新日志
+- closeChangelogModal()      (L3509) - 关闭更新日志
 
 ================================================================================
                            六、关键常量和配置
@@ -403,6 +408,12 @@ quadrantMode: '1'|'2'|'3'|'4'|'12'|'14'|'1234'
 ================================================================================
                            八、版本历史
 ================================================================================
+
+v 2.1.0 - 交互增强 (2026-04-10)
+- 新增按住鼠标拖动快速勾选/取消数据点
+- 曲线和数据点样式均支持拖拽勾选
+- 采用事件委托模式优化拖拽性能
+- 拖拽时grabbing光标反馈
 
 v 2.0.1 - Bug修复 (2026-04-09)
 - 修复曲线点勾选影响所有曲线的严重bug
