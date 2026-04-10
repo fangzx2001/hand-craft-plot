@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DontLoseYourAcademicMorality - v 2.0.0</title>
+    <title>Hand-Craft-Plot - v 2.0.1</title>
     <style>
         * {
             margin: 0;
@@ -933,7 +933,7 @@
 
                 <div class="developer-info">
                     <p><strong>开发者：FANGZx</strong></p>
-                    <p class="version">DontLoseYourAcademicMorality - v 2.0.0</p>
+                    <p class="version">Hand-Craft-Plot - v 2.0.1</p>
                 </div>
             </div>
         </div>
@@ -946,6 +946,15 @@
                 <button class="modal-close" onclick="closeChangelogModal()">&times;</button>
             </div>
             <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+                <div class="changelog-entry">
+                    <h4>v 2.0.1 - Bug修复</h4>
+                    <p class="changelog-date">2026-04-09</p>
+                    <ul>
+                        <li>修复曲线点勾选会影响所有曲线的严重bug</li>
+                        <li>每条曲线现在只连接自己勾选的数据点</li>
+                        <li>项目更名为 Hand-Craft-Plot</li>
+                    </ul>
+                </div>
                 <div class="changelog-entry">
                     <h4>v 2.0.0 - 多象限模式</h4>
                     <p class="changelog-date">2026-04-07</p>
@@ -1061,7 +1070,7 @@
 
     <div class="container">
         <div class="header">
-            <DontLoseYourAcademicMorality>
+            <Hand-Craft-Plot>
         </div>
         <div class="main-content">
             <div class="canvas-container">
@@ -1076,7 +1085,7 @@
                 </div>
             </div>
             <div class="menu-panel">
-                <div class="menu-title">DontLoseYourAcademicMorality<br><span style="font-size: 14px;">v 2.0.0</span></div>
+                <div class="menu-title">Hand-Craft-Plot<br><span style="font-size: 14px;">v 2.0.1</span></div>
                 
                 <!-- 初始菜单 -->
                 <div id="mainMenu">
@@ -2065,7 +2074,7 @@
                             <button class="btn btn-secondary" style="margin-bottom: 8px; padding: 4px 12px; font-size: 12px;" 
                                 onclick="toggleSelectAllCurvePoints(${index})">${state.points.length > 0 && state.points.every(p => curve.points.includes(p.id)) ? '取消全选' : '全选所有点'}</button>
                             <div class="checkbox-group" id="curvePoints${index}">
-                                ${renderPointCheckboxes(curve.points)}
+                                ${renderPointCheckboxes(curve.points, index)}
                             </div>
                         </div>
                         <div class="form-group">
@@ -2122,11 +2131,11 @@
                 state.curves.length >= state.maxCurves ? 'none' : 'block';
         }
 
-        function renderPointCheckboxes(selectedPoints) {
+        function renderPointCheckboxes(selectedPoints, curveIndex) {
             return state.points.map(p => `
                 <label class="checkbox-item">
                     <input type="checkbox" ${selectedPoints.includes(p.id) ? 'checked' : ''} 
-                        onchange="toggleCurvePoint(${p.id}, this.checked)">
+                        onchange="toggleCurvePoint(${curveIndex}, ${p.id}, this.checked)">
                     P${p.id}
                 </label>
             `).join('');
@@ -2184,19 +2193,19 @@
             render();
         }
 
-        function toggleCurvePoint(pointId, checked) {
-            state.curves.forEach(curve => {
-                if (checked) {
-                    if (!curve.points.includes(pointId)) {
-                        curve.points.push(pointId);
-                    }
-                } else {
-                    const idx = curve.points.indexOf(pointId);
-                    if (idx > -1) {
-                        curve.points.splice(idx, 1);
-                    }
+        function toggleCurvePoint(curveIndex, pointId, checked) {
+            const curve = state.curves[curveIndex];
+            if (!curve) return;
+            if (checked) {
+                if (!curve.points.includes(pointId)) {
+                    curve.points.push(pointId);
                 }
-            });
+            } else {
+                const idx = curve.points.indexOf(pointId);
+                if (idx > -1) {
+                    curve.points.splice(idx, 1);
+                }
+            }
             renderCurveList();
             render();
         }
